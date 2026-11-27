@@ -126,6 +126,7 @@ export interface PokerSettings {
   shotClockSeconds: number;
   themeColor: ThemeColorId;
   clockDisplayMode: ClockDisplayMode;
+  tooltipsEnabled: boolean;
 }
 
 export interface TableStats {

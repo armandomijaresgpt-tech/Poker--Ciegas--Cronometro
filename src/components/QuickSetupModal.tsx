@@ -8,6 +8,7 @@ import {
 } from '../data/presets';
 import { ThemeColorId } from '../types/poker';
 import { ChipBadge } from './ChipBadge';
+import { Tooltip } from './Tooltip';
 
 interface QuickSetupModalProps {
   isOpen: boolean;
@@ -78,7 +79,7 @@ export const QuickSetupModal: React.FC<QuickSetupModalProps> = ({
     >
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl bg-[#12151C] border border-white/10 p-5 sm:p-6 shadow-2xl space-y-5"
+        className="w-full max-w-2xl max-h-[calc(100dvh-24px)] overflow-y-auto rounded-t-3xl sm:rounded-2xl bg-[#12151C] border border-white/10 p-5 sm:p-6 shadow-2xl space-y-5"
       >
         <div className="flex items-center justify-between gap-4 pb-3 border-b border-white/[0.08]">
           <div className="flex items-center gap-2.5">
@@ -87,27 +88,31 @@ export const QuickSetupModal: React.FC<QuickSetupModalProps> = ({
               Asistente rápido (Quick Setup)
             </h2>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] cursor-pointer"
-            aria-label="Cerrar asistente"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <Tooltip title="Cerrar asistente" content="Cierra el asistente sin modificar tu estructura actual.">
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] cursor-pointer"
+              aria-label="Cerrar asistente"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </Tooltip>
         </div>
 
         <div>
           <label className="block text-xs font-medium text-slate-400 mb-1.5">
             Nombre del torneo o partida
           </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ej. Póker del Viernes"
-            className="min-h-[44px] w-full rounded-xl bg-[#0A0C10] border border-white/15 px-3.5 text-sm text-white focus:outline-none focus:border-white/40"
-          />
+          <Tooltip title="Nombre de la partida" content="Título que aparecerá arriba en el reloj y en el historial al guardar la partida." className="w-full">
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ej. Póker del Viernes"
+              className="min-h-[44px] w-full rounded-xl bg-[#0A0C10] border border-white/15 px-3.5 text-sm text-white focus:outline-none focus:border-white/40"
+            />
+          </Tooltip>
         </div>
 
         {/* Game Type */}
@@ -239,40 +244,53 @@ export const QuickSetupModal: React.FC<QuickSetupModalProps> = ({
         </OptionGroup>
 
         {/* Live Starting Chips Breakdown */}
-        <div className="rounded-xl bg-[#0A0C10] border border-white/[0.08] p-4 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-            <span className="font-semibold text-white">Reparto recomendado por jugador</span>
-            <span className="font-mono-tabular text-slate-400">
-              BB inicial: {smallestChip * 2} · {startingBB} Big Blinds
-            </span>
+        <Tooltip
+          title="Reparto automático de fichas"
+          content="Sugerencia equilibrada de cuántas fichas de cada color dar a cada jugador al empezar."
+          className="w-full block"
+        >
+          <div className="w-full rounded-xl bg-[#0A0C10] border border-white/[0.08] p-4 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="font-semibold text-white">Reparto recomendado por jugador</span>
+              <span className="font-mono-tabular text-slate-400">
+                BB inicial: {smallestChip * 2} · {startingBB} Big Blinds
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              {chipBreakdown.map((item) => (
+                <ChipBadge
+                  key={item.value}
+                  value={item.value}
+                  color={item.color}
+                  count={item.count}
+                />
+              ))}
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            {chipBreakdown.map((item) => (
-              <ChipBadge
-                key={item.value}
-                value={item.value}
-                color={item.color}
-                count={item.count}
-              />
-            ))}
-          </div>
-        </div>
+        </Tooltip>
 
         <div className="flex items-center justify-end gap-3 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-[46px] px-4 rounded-xl text-sm font-medium text-slate-300 hover:text-white cursor-pointer"
+          <Tooltip title="Cancelar" content="Cierra el asistente sin cambiar tu estructura actual.">
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-[46px] px-4 rounded-xl text-sm font-medium text-slate-300 hover:text-white cursor-pointer"
+            >
+              Cancelar
+            </button>
+          </Tooltip>
+          <Tooltip
+            title="Generar y aplicar"
+            content="Crea una nueva estructura con estos parámetros, la guarda en tus estructuras y la activa en el reloj."
           >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="min-h-[46px] px-6 rounded-xl text-sm font-semibold text-white transition-all active:scale-[0.98] cursor-pointer"
-            style={{ backgroundColor: palette.primaryHex }}
-          >
-            Generar estructura y aplicar
-          </button>
+            <button
+              type="submit"
+              className="min-h-[46px] px-6 rounded-xl text-sm font-semibold text-white transition-all active:scale-[0.98] cursor-pointer"
+              style={{ backgroundColor: palette.primaryHex }}
+            >
+              Generar estructura y aplicar
+            </button>
+          </Tooltip>
         </div>
       </form>
     </div>
@@ -295,16 +313,21 @@ const SelectChipButton: React.FC<{
   onClick: () => void;
   children: React.ReactNode;
 }> = ({ active, accentColor, onClick, children }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`min-h-[40px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors whitespace-nowrap cursor-pointer ${
-      active
-        ? 'text-white font-semibold'
-        : 'bg-[#181C26] text-slate-300 hover:text-white border border-white/[0.06]'
-    }`}
-    style={active ? { backgroundColor: accentColor } : undefined}
+  <Tooltip
+    title={`Opción: ${typeof children === 'string' ? children : 'Seleccionar'}`}
+    content="Toca para elegir este parámetro en el generador automático de estructura."
   >
-    {children}
-  </button>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`min-h-[40px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition-colors whitespace-nowrap cursor-pointer ${
+        active
+          ? 'text-white font-semibold'
+          : 'bg-[#181C26] text-slate-300 hover:text-white border border-white/[0.06]'
+      }`}
+      style={active ? { backgroundColor: accentColor } : undefined}
+    >
+      {children}
+    </button>
+  </Tooltip>
 );

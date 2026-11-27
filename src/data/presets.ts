@@ -249,6 +249,7 @@ export const DEFAULT_SETTINGS: PokerSettings = {
   shotClockSeconds: 30,
   themeColor: 'crimson',
   clockDisplayMode: 'standard',
+  tooltipsEnabled: true,
 };
 
 export const DEFAULT_TABLE_STATS: TableStats = {

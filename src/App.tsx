@@ -7,6 +7,7 @@ import {
   Settings,
   WifiOff,
   Maximize2,
+  HelpCircle,
 } from 'lucide-react';
 import { AppTab } from './types/poker';
 import { THEME_PALETTES } from './data/presets';
@@ -19,10 +20,15 @@ import { LeagueView } from './components/LeagueView';
 import { SidePotCalculatorView } from './components/SidePotCalculatorView';
 import { SettingsView } from './components/SettingsView';
 import { PWAInstallButton } from './components/PWAInstallButton';
+import { Tooltip, TooltipProvider } from './components/Tooltip';
+import { HelpMenuModal } from './components/HelpMenuModal';
+import { TutorialOverlay } from './components/TutorialOverlay';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<AppTab>('clock');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [showHelpMenu, setShowHelpMenu] = useState(false);
   const isOnline = useOnlineStatus();
 
   const clock = usePokerClock();
@@ -43,6 +49,7 @@ export default function App() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (showTutorial || showHelpMenu) return;
       const target = e.target as HTMLElement | null;
       if (
         target &&
@@ -72,7 +79,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlayPause, goToNextLevel, goToPrevLevel, activeTab, isFullscreen]);
+  }, [togglePlayPause, goToNextLevel, goToPrevLevel, activeTab, isFullscreen, showTutorial, showHelpMenu]);
 
   const toggleFullscreen = async () => {
     const next = !isFullscreen;
@@ -98,76 +105,173 @@ export default function App() {
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, []);
 
-  const navItems: { id: AppTab; label: string; mobileLabel: string; icon: typeof Timer }[] = [
-    { id: 'clock', label: 'Reloj', mobileLabel: 'Reloj', icon: Timer },
-    { id: 'structure', label: 'Estructura', mobileLabel: 'Niveles', icon: ListOrdered },
-    { id: 'league', label: 'Liga', mobileLabel: 'Liga', icon: Trophy },
-    { id: 'tools', label: 'Botes', mobileLabel: 'Botes', icon: Calculator },
-    { id: 'settings', label: 'Ajustes', mobileLabel: 'Ajustes', icon: Settings },
+  const navItems: {
+    id: AppTab;
+    label: string;
+    mobileLabel: string;
+    tooltip: string;
+    icon: typeof Timer;
+  }[] = [
+    {
+      id: 'clock',
+      label: 'Reloj',
+      mobileLabel: 'Reloj',
+      tooltip: 'Cronómetro de torneo, ciegas en vivo, Call the Clock y control rápido de mesa.',
+      icon: Timer,
+    },
+    {
+      id: 'structure',
+      label: 'Estructura',
+      mobileLabel: 'Niveles',
+      tooltip: 'Configura niveles de ciegas, descansos, Quick Setup, entradas en fichas, premios y set de fichas.',
+      icon: ListOrdered,
+    },
+    {
+      id: 'league',
+      label: 'Liga',
+      mobileLabel: 'Liga',
+      tooltip: 'Gestiona jugadores en mesa, sortea asientos, guarda el historial y consulta estadísticas, ROI y ligas.',
+      icon: Trophy,
+    },
+    {
+      id: 'tools',
+      label: 'Botes',
+      mobileLabel: 'Botes',
+      tooltip: 'Calculadora de botes paralelos (All-In múltiple) y guía oficial de orden de manos de póker.',
+      icon: Calculator,
+    },
+    {
+      id: 'settings',
+      label: 'Ajustes',
+      mobileLabel: 'Ajustes',
+      tooltip: 'Temas de color, sonidos por evento, vibración, pantalla encendida y respaldo offline JSON.',
+      icon: Settings,
+    },
   ];
 
+  const startGuidedTutorial = () => {
+    setIsFullscreen(false);
+    setShowTutorial(true);
+  };
+
   return (
-    <div className="min-h-screen bg-[#0A0C10] text-slate-100 flex flex-col">
-      {/* Desktop Top Navigation Bar (3-zone contract) */}
-      <header className="hidden md:flex items-center justify-between gap-8 px-6 lg:px-10 h-16 border-b border-white/[0.08] bg-[#0A0C10]/90 backdrop-blur-md sticky top-0 z-30">
-        <a
-          href="#reloj"
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveTab('clock');
-          }}
-          className="text-lg font-bold tracking-tight text-white whitespace-nowrap shrink-0"
-        >
-          MesaPoker
-        </a>
-
-        <nav className="flex items-center gap-7 text-sm font-medium" aria-label="Navegación principal">
-          {navItems.map((item) => {
-            const active = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setActiveTab(item.id)}
-                className={`py-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer border-b-2 ${
-                  active
-                    ? 'text-white'
-                    : 'text-slate-400 hover:text-white border-transparent'
-                }`}
-                style={active ? { borderBottomColor: palette.primaryHex } : undefined}
-              >
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="flex items-center gap-3 shrink-0">
-          <PWAInstallButton variant="header" />
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('clock');
-              toggleFullscreen();
-            }}
-            className="min-h-[40px] flex items-center gap-2 rounded-lg bg-[#181C26] hover:bg-[#222735] border border-white/[0.08] px-3.5 py-2 text-xs font-medium text-slate-200 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+    <TooltipProvider
+      enabled={clock.settings.tooltipsEnabled}
+      accentHex={palette.primaryHex}
+    >
+      <div className="min-h-screen bg-[#0A0C10] text-slate-100 flex flex-col">
+        {/* Desktop Top Navigation Bar (3-zone contract) */}
+        <header className="hidden md:flex items-center justify-between gap-8 px-6 lg:px-10 h-16 border-b border-white/[0.08] bg-[#0A0C10]/90 backdrop-blur-md sticky top-0 z-30">
+          <Tooltip
+            title="MesaPoker"
+            content="Volver a la pantalla principal del reloj de póker."
+            placement="bottom"
           >
-            <Maximize2 className="w-3.5 h-3.5" />
-            <span>Modo TV</span>
-          </button>
-        </div>
-      </header>
+            <a
+              href="#reloj"
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveTab('clock');
+              }}
+              className="text-lg font-bold tracking-tight text-white whitespace-nowrap shrink-0"
+            >
+              MesaPoker
+            </a>
+          </Tooltip>
 
-      {/* Mobile Top Bar (Compact 52px) */}
-      <header className="flex md:hidden items-center justify-between px-4 h-[52px] border-b border-white/[0.08] bg-[#0A0C10]/90 backdrop-blur-md sticky top-0 z-30">
-        <span className="text-base font-bold tracking-tight text-white whitespace-nowrap shrink-0">
-          MesaPoker
-        </span>
+          <nav
+            data-tour="nav-tabs"
+            className="flex items-center gap-7 text-sm font-medium"
+            aria-label="Navegación principal"
+          >
+            {navItems.map((item) => {
+              const active = activeTab === item.id;
+              return (
+                <Tooltip
+                  key={item.id}
+                  title={item.label}
+                  content={item.tooltip}
+                  placement="bottom"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab(item.id)}
+                    className={`py-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer border-b-2 ${
+                      active
+                        ? 'text-white'
+                        : 'text-slate-400 hover:text-white border-transparent'
+                    }`}
+                    style={active ? { borderBottomColor: palette.primaryHex } : undefined}
+                  >
+                    {item.label}
+                  </button>
+                </Tooltip>
+              );
+            })}
+          </nav>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <PWAInstallButton variant="header" />
-        </div>
-      </header>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <PWAInstallButton variant="header" />
+            <Tooltip
+              title="Tutorial y Ayuda"
+              content="Abre la guía interactiva paso a paso, activa el Modo Explorar Tooltips o consulta los atajos."
+              placement="bottom"
+            >
+              <button
+                type="button"
+                onClick={() => setShowHelpMenu(true)}
+                className="min-h-[40px] flex items-center gap-1.5 rounded-lg bg-[#181C26] hover:bg-[#222735] border border-white/[0.08] px-3 py-2 text-xs font-medium text-slate-200 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                aria-label="Abrir tutorial y ayuda"
+              >
+                <HelpCircle className="w-4 h-4 text-amber-300" />
+                <span>Tutorial</span>
+              </button>
+            </Tooltip>
+            <Tooltip
+              title="Modo TV (Tecla F)"
+              content="Muestra el reloj a pantalla completa ideal para proyectar en un televisor o monitor."
+              placement="bottom"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('clock');
+                  toggleFullscreen();
+                }}
+                className="min-h-[40px] flex items-center gap-2 rounded-lg bg-[#181C26] hover:bg-[#222735] border border-white/[0.08] px-3.5 py-2 text-xs font-medium text-slate-200 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>Modo TV</span>
+              </button>
+            </Tooltip>
+          </div>
+        </header>
+
+        {/* Mobile Top Bar (Compact 52px) */}
+        <header className="flex md:hidden items-center justify-between px-4 h-[52px] border-b border-white/[0.08] bg-[#0A0C10]/90 backdrop-blur-md sticky top-0 z-30">
+          <span className="text-base font-bold tracking-tight text-white whitespace-nowrap shrink-0">
+            MesaPoker
+          </span>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <PWAInstallButton variant="header" />
+            <Tooltip
+              title="Tutorial y Modo Explorar"
+              content="Inicia el recorrido paso a paso o activa el Modo Explorar para tocar cualquier botón y ver qué hace."
+              placement="bottom"
+            >
+              <button
+                type="button"
+                onClick={() => setShowHelpMenu(true)}
+                className="min-h-[38px] flex items-center gap-1.5 rounded-lg bg-[#181C26] border border-white/[0.08] px-2.5 text-xs font-medium text-slate-200 whitespace-nowrap shrink-0 cursor-pointer"
+                aria-label="Abrir tutorial y ayuda"
+              >
+                <HelpCircle className="w-4 h-4 text-amber-300" />
+                <span>Guía</span>
+              </button>
+            </Tooltip>
+          </div>
+        </header>
 
       {/* Main Content Workspace */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-5 sm:py-7 pb-24 md:pb-10">
@@ -241,6 +345,7 @@ export default function App() {
               clock.updateSettings({ soundEnabled: !clock.settings.soundEnabled })
             }
             onUpdateTableStats={clock.updateTableStats}
+            tutorialActive={showTutorial}
           />
         )}
 
@@ -319,6 +424,7 @@ export default function App() {
             onResetStructures={clock.resetAllStructures}
             onExportBackup={clock.exportBackupJson}
             onImportBackup={clock.importBackupJson}
+            onStartTutorial={startGuidedTutorial}
           />
         )}
       </main>
@@ -326,6 +432,7 @@ export default function App() {
       {/* Mobile Bottom Tab Bar (5 tabs, 64px height) */}
       {!isFullscreen && (
         <nav
+          data-tour="nav-tabs"
           className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0E1117]/95 backdrop-blur-md border-t border-white/[0.08] pb-safe"
           aria-label="Navegación móvil"
         >
@@ -334,23 +441,49 @@ export default function App() {
               const Icon = item.icon;
               const active = activeTab === item.id;
               return (
-                <button
+                <Tooltip
                   key={item.id}
-                  type="button"
-                  onClick={() => setActiveTab(item.id)}
-                  className="min-h-[48px] flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer"
-                  style={{ color: active ? palette.primaryHex : '#94A3B8' }}
+                  title={item.label}
+                  content={item.tooltip}
+                  placement="top"
+                  className="w-full"
                 >
-                  <Icon className="w-[20px] h-[20px]" />
-                  <span className="text-[10px] font-medium tracking-tight whitespace-nowrap">
-                    {item.mobileLabel}
-                  </span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab(item.id)}
+                    className="w-full min-h-[48px] flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer"
+                    style={{ color: active ? palette.primaryHex : '#94A3B8' }}
+                  >
+                    <Icon className="w-[20px] h-[20px]" />
+                    <span className="text-[10px] font-medium tracking-tight whitespace-nowrap">
+                      {item.mobileLabel}
+                    </span>
+                  </button>
+                </Tooltip>
               );
             })}
           </div>
         </nav>
       )}
-    </div>
+
+      <HelpMenuModal
+        isOpen={showHelpMenu}
+        accentHex={palette.primaryHex}
+        tooltipsEnabled={clock.settings.tooltipsEnabled}
+        onClose={() => setShowHelpMenu(false)}
+        onStartTutorial={startGuidedTutorial}
+        onToggleTooltipsEnabled={(val) =>
+          clock.updateSettings({ tooltipsEnabled: val })
+        }
+      />
+
+      <TutorialOverlay
+        isOpen={showTutorial}
+        accentHex={palette.primaryHex}
+        onSwitchTab={setActiveTab}
+        onClose={() => setShowTutorial(false)}
+      />
+      </div>
+    </TooltipProvider>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Download, Share, PlusSquare, X, CheckCircle2 } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
+import { Tooltip } from './Tooltip';
 
 interface PWAInstallButtonProps {
   variant?: 'header' | 'card';
@@ -24,36 +25,50 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'h
 
   if (isInstallable) {
     return (
-      <button
-        type="button"
-        onClick={install}
-        className={
-          variant === 'card'
-            ? 'w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-[0.98] px-5 py-3 text-sm font-semibold text-white transition-all whitespace-nowrap shrink-0 cursor-pointer'
-            : 'min-h-[40px] flex items-center gap-2 rounded-lg bg-rose-600 hover:bg-rose-500 active:scale-[0.98] px-3.5 py-2 text-xs font-semibold text-white transition-all whitespace-nowrap shrink-0 cursor-pointer'
-        }
+      <Tooltip
+        title="Instalar App Offline"
+        content="Guarda MesaPoker en tu teléfono, tablet u ordenador para abrirla sin navegador y usarla sin internet."
+        placement="bottom"
+        className={variant === 'card' ? 'w-full' : 'inline-flex'}
       >
-        <Download className="w-4 h-4 shrink-0" />
-        <span>Instalar App Offline</span>
-      </button>
+        <button
+          type="button"
+          onClick={install}
+          className={
+            variant === 'card'
+              ? 'w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-[0.98] px-5 py-3 text-sm font-semibold text-white transition-all whitespace-nowrap shrink-0 cursor-pointer'
+              : 'min-h-[40px] flex items-center gap-2 rounded-lg bg-rose-600 hover:bg-rose-500 active:scale-[0.98] px-3.5 py-2 text-xs font-semibold text-white transition-all whitespace-nowrap shrink-0 cursor-pointer'
+          }
+        >
+          <Download className="w-4 h-4 shrink-0" />
+          <span>Instalar App Offline</span>
+        </button>
+      </Tooltip>
     );
   }
 
   if (isIOS) {
     return (
       <>
-        <button
-          type="button"
-          onClick={() => setShowIOSGuide(true)}
-          className={
-            variant === 'card'
-              ? 'w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 px-5 py-3 text-sm font-semibold text-slate-100 transition-all whitespace-nowrap shrink-0 cursor-pointer'
-              : 'min-h-[40px] flex items-center gap-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 px-3 py-2 text-xs font-medium text-slate-200 transition-all whitespace-nowrap shrink-0 cursor-pointer'
-          }
+        <Tooltip
+          title="Instalar en iPhone / iPad"
+          content="Muestra los pasos para añadir MesaPoker a tu pantalla de inicio en Safari y usarla sin conexión."
+          placement="bottom"
+          className={variant === 'card' ? 'w-full' : 'inline-flex'}
         >
-          <Download className="w-4 h-4 shrink-0" />
-          <span>Instalar en iOS</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setShowIOSGuide(true)}
+            className={
+              variant === 'card'
+                ? 'w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 px-5 py-3 text-sm font-semibold text-slate-100 transition-all whitespace-nowrap shrink-0 cursor-pointer'
+                : 'min-h-[40px] flex items-center gap-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 px-3 py-2 text-xs font-medium text-slate-200 transition-all whitespace-nowrap shrink-0 cursor-pointer'
+            }
+          >
+            <Download className="w-4 h-4 shrink-0" />
+            <span>Instalar en iOS</span>
+          </button>
+        </Tooltip>
 
         {showIOSGuide && (
           <div

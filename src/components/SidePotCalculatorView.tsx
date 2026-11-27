@@ -9,6 +9,7 @@ import {
 import { ThemeColorId } from '../types/poker';
 import { formatFichas } from '../hooks/usePokerClock';
 import { NumericInput } from './NumericInput';
+import { Tooltip } from './Tooltip';
 
 interface SidePotCalculatorViewProps {
   themeColor: ThemeColorId;
@@ -65,7 +66,10 @@ export const SidePotCalculatorView: React.FC<SidePotCalculatorViewProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       {/* Side Pot Calculator */}
-      <section className="lg:col-span-7 rounded-2xl bg-[#12151C] border border-white/[0.08] p-5 sm:p-6 space-y-5">
+      <section
+        data-tour="tools-sidepot"
+        className="lg:col-span-7 rounded-2xl bg-[#12151C] border border-white/[0.08] p-5 sm:p-6 space-y-5"
+      >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <Calculator className="w-5 h-5" style={{ color: palette.primaryHex }} />
@@ -79,14 +83,19 @@ export const SidePotCalculatorView: React.FC<SidePotCalculatorViewProps> = ({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={resetAll}
-            className="min-h-[40px] flex items-center gap-1.5 rounded-xl bg-[#181C26] hover:bg-[#222735] border border-white/[0.06] px-3.5 text-xs font-medium text-slate-300 hover:text-white cursor-pointer"
+          <Tooltip
+            title="Limpiar apuestas"
+            content="Reinicia las apuestas a 0 fichas para calcular una nueva mano."
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Limpiar</span>
-          </button>
+            <button
+              type="button"
+              onClick={resetAll}
+              className="min-h-[40px] flex items-center gap-1.5 rounded-xl bg-[#181C26] hover:bg-[#222735] border border-white/[0.06] px-3.5 text-xs font-medium text-slate-300 hover:text-white cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Limpiar</span>
+            </button>
+          </Tooltip>
         </div>
 
         <div className="space-y-2.5">
@@ -98,78 +107,115 @@ export const SidePotCalculatorView: React.FC<SidePotCalculatorViewProps> = ({
 
           {players.map((p) => (
             <div key={p.id} className="grid grid-cols-12 gap-2 items-center">
-              <input
-                type="text"
-                value={p.name}
-                onChange={(e) => updatePlayer(p.id, { name: e.target.value })}
-                aria-label="Nombre de jugador"
-                className="col-span-5 min-h-[44px] rounded-xl bg-[#0A0C10] border border-white/10 px-3 text-sm text-white focus:outline-none focus:border-white/30"
-              />
-              <NumericInput
-                min={0}
-                value={p.bet}
-                onChange={(val) => updatePlayer(p.id, { bet: val })}
-                aria-label={`Apuesta de ${p.name}`}
-                className="col-span-4 min-h-[44px] rounded-xl bg-[#0A0C10] border border-white/10 px-3 text-sm font-mono-tabular text-white focus:outline-none focus:border-white/30"
-              />
+              <Tooltip
+                title="Nombre del jugador"
+                content="Identifica quién realizó esta apuesta en el All-In."
+                className="col-span-5"
+              >
+                <input
+                  type="text"
+                  value={p.name}
+                  onChange={(e) => updatePlayer(p.id, { name: e.target.value })}
+                  aria-label="Nombre de jugador"
+                  className="w-full min-h-[44px] rounded-xl bg-[#0A0C10] border border-white/10 px-3 text-sm text-white focus:outline-none focus:border-white/30"
+                />
+              </Tooltip>
+              <Tooltip
+                title="Apuesta total en fichas"
+                content="Total de fichas puestas por este jugador en la mano actual (incluyendo su resto All-In)."
+                className="col-span-4"
+              >
+                <NumericInput
+                  min={0}
+                  value={p.bet}
+                  onChange={(val) => updatePlayer(p.id, { bet: val })}
+                  aria-label={`Apuesta de ${p.name}`}
+                  className="w-full min-h-[44px] rounded-xl bg-[#0A0C10] border border-white/10 px-3 text-sm font-mono-tabular text-white focus:outline-none focus:border-white/30"
+                />
+              </Tooltip>
               <div className="col-span-3 flex items-center justify-end gap-1">
-                <button
-                  type="button"
-                  onClick={() => updatePlayer(p.id, { folded: !p.folded })}
-                  className={`min-h-[40px] px-2.5 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
-                    p.folded
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                      : 'bg-[#181C26] text-slate-300 hover:text-white border border-white/[0.06]'
-                  }`}
-                  title="Marcar si el jugador se retiró tras apostar"
+                <Tooltip
+                  title={p.folded ? 'Estado: Fold (Retirado)' : 'Estado: Activo'}
+                  content="Cambia a «Fold» si el jugador puso fichas pero abandonó la mano (sus fichas suman al bote pero no puede ganarlo)."
                 >
-                  {p.folded ? 'Fold' : 'Activo'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removePlayer(p.id)}
-                  disabled={players.length <= 2}
-                  className="min-h-[40px] min-w-[36px] flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-400 disabled:opacity-25 cursor-pointer"
-                  aria-label={`Quitar a ${p.name}`}
+                  <button
+                    type="button"
+                    onClick={() => updatePlayer(p.id, { folded: !p.folded })}
+                    className={`min-h-[40px] px-2.5 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
+                      p.folded
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        : 'bg-[#181C26] text-slate-300 hover:text-white border border-white/[0.06]'
+                    }`}
+                  >
+                    {p.folded ? 'Fold' : 'Activo'}
+                  </button>
+                </Tooltip>
+                <Tooltip
+                  title="Eliminar fila"
+                  content="Quita a este jugador de la calculadora (mínimo 2 jugadores)."
                 >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => removePlayer(p.id)}
+                    disabled={players.length <= 2}
+                    className="min-h-[40px] min-w-[36px] flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-400 disabled:opacity-25 cursor-pointer"
+                    aria-label={`Quitar a ${p.name}`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </Tooltip>
               </div>
             </div>
           ))}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-          <button
-            type="button"
-            onClick={addPlayer}
-            className="min-h-[44px] flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white cursor-pointer"
-            style={{ backgroundColor: palette.primaryHex }}
+          <Tooltip
+            title="Añadir jugador"
+            content="Agrega otro participante implicado en la mano para calcular botes adicionales."
           >
-            <Plus className="w-4 h-4" />
-            <span>Añadir jugador</span>
-          </button>
+            <button
+              type="button"
+              onClick={addPlayer}
+              className="min-h-[44px] flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white cursor-pointer"
+              style={{ backgroundColor: palette.primaryHex }}
+            >
+              <Plus className="w-4 h-4" />
+              <span>Añadir jugador</span>
+            </button>
+          </Tooltip>
 
-          <label className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showExplanation}
-              onChange={(e) => setShowExplanation(e.target.checked)}
-              className="w-4 h-4 rounded"
-              style={{ accentColor: palette.primaryHex }}
-            />
-            <span>Explicar cálculo paso a paso</span>
-          </label>
+          <Tooltip
+            title="Explicación paso a paso"
+            content="Muestra u oculta el desglose matemático de cuántas fichas aporta cada jugador a cada bote."
+          >
+            <label className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showExplanation}
+                onChange={(e) => setShowExplanation(e.target.checked)}
+                className="w-4 h-4 rounded"
+                style={{ accentColor: palette.primaryHex }}
+              />
+              <span>Explicar cálculo paso a paso</span>
+            </label>
+          </Tooltip>
         </div>
 
         {/* Calculated Pots Output */}
         <div className="pt-4 border-t border-white/[0.08] space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Resultado de los botes</h2>
-            <span className="text-xs font-mono-tabular text-slate-400">
-              Total en mesa: <strong className="text-white">{formatFichas(totalInPot)}</strong>
-            </span>
-          </div>
+          <Tooltip
+            title="Resultado de los botes"
+            content="Bote principal y botes paralelos calculados automáticamente con los jugadores elegibles para cada uno."
+            className="w-full block"
+          >
+            <div className="w-full flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-white">Resultado de los botes</h2>
+              <span className="text-xs font-mono-tabular text-slate-400">
+                Total en mesa: <strong className="text-white">{formatFichas(totalInPot)}</strong>
+              </span>
+            </div>
+          </Tooltip>
 
           {pots.length === 0 ? (
             <p className="text-sm text-slate-400 py-4 text-center">
@@ -206,13 +252,19 @@ export const SidePotCalculatorView: React.FC<SidePotCalculatorViewProps> = ({
 
       {/* Hand Rankings Cheat Sheet */}
       <section className="lg:col-span-5 rounded-2xl bg-[#12151C] border border-white/[0.08] p-5 sm:p-6 space-y-4">
-        <div className="flex items-center gap-2.5">
-          <Award className="w-5 h-5" style={{ color: palette.primaryHex }} />
-          <div>
-            <h2 className="text-lg font-bold text-white">Orden de manos de póker</h2>
-            <p className="text-xs text-slate-400">De mayor a menor valor en Texas Hold&apos;em</p>
+        <Tooltip
+          title="Orden oficial de manos"
+          content="Referencia rápida offline de todas las combinaciones de Texas Hold'em de mayor (1) a menor (10)."
+          className="w-full block"
+        >
+          <div className="w-full flex items-center gap-2.5">
+            <Award className="w-5 h-5" style={{ color: palette.primaryHex }} />
+            <div>
+              <h2 className="text-lg font-bold text-white">Orden de manos de póker</h2>
+              <p className="text-xs text-slate-400">De mayor a menor valor en Texas Hold&apos;em</p>
+            </div>
           </div>
-        </div>
+        </Tooltip>
 
         <div className="divide-y divide-white/[0.06]">
           {HAND_RANKINGS.map((hand) => (

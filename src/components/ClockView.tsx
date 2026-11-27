@@ -37,6 +37,7 @@ import {
   THEME_PALETTES,
 } from '../data/presets';
 import { ChipBadge } from './ChipBadge';
+import { Tooltip } from './Tooltip';
 
 interface ClockViewProps {
   tournamentTitle: string;
@@ -87,6 +88,7 @@ interface ClockViewProps {
   onScrubProgress: (ratio: number) => void;
   onToggleMute: () => void;
   onUpdateTableStats: (patch: Partial<TableStats>) => void;
+  tutorialActive?: boolean;
 }
 
 export const ClockView: React.FC<ClockViewProps> = ({
@@ -138,6 +140,7 @@ export const ClockView: React.FC<ClockViewProps> = ({
   onScrubProgress,
   onToggleMute,
   onUpdateTableStats,
+  tutorialActive = false,
 }) => {
   const [confirmResetTourney, setConfirmResetTourney] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
@@ -151,6 +154,7 @@ export const ClockView: React.FC<ClockViewProps> = ({
   const anteLabel = settings.anteMode === 'big_blind' ? 'BB Ante' : 'Ante';
 
   const showPreGameIntro =
+    !tutorialActive &&
     settings.preGameIntroEnabled &&
     !introDismissed &&
     !isRunning &&
@@ -188,65 +192,105 @@ export const ClockView: React.FC<ClockViewProps> = ({
         </h1>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-          <div className="rounded-xl bg-[#181C26] border border-white/[0.06] p-3.5">
-            <div className="text-xs text-slate-400">Stack inicial</div>
-            <div className="text-lg font-bold font-mono-tabular text-white mt-0.5">
-              {formatChipValue(tableStats.startingStack)}
+          <Tooltip
+            title="Stack inicial"
+            content="Cantidad de fichas con la que empieza cada jugador al entrar en la partida."
+            className="w-full"
+          >
+            <div className="w-full rounded-xl bg-[#181C26] border border-white/[0.06] p-3.5">
+              <div className="text-xs text-slate-400">Stack inicial</div>
+              <div className="text-lg font-bold font-mono-tabular text-white mt-0.5">
+                {formatChipValue(tableStats.startingStack)}
+              </div>
             </div>
-          </div>
-          <div className="rounded-xl bg-[#181C26] border border-white/[0.06] p-3.5">
-            <div className="text-xs text-slate-400">Ciegas iniciales</div>
-            <div className="text-lg font-bold font-mono-tabular text-white mt-0.5">
-              {formatChipValue(currentLevel.smallBlind)}/{formatChipValue(currentLevel.bigBlind)}
+          </Tooltip>
+          <Tooltip
+            title="Ciegas iniciales"
+            content="Ciega Pequeña / Ciega Grande obligatorias en el Nivel 1."
+            className="w-full"
+          >
+            <div className="w-full rounded-xl bg-[#181C26] border border-white/[0.06] p-3.5">
+              <div className="text-xs text-slate-400">Ciegas iniciales</div>
+              <div className="text-lg font-bold font-mono-tabular text-white mt-0.5">
+                {formatChipValue(currentLevel.smallBlind)}/{formatChipValue(currentLevel.bigBlind)}
+              </div>
             </div>
-          </div>
-          <div className="rounded-xl bg-[#181C26] border border-white/[0.06] p-3.5">
-            <div className="text-xs text-slate-400">Entrada</div>
-            <div className="text-lg font-bold font-mono-tabular text-white mt-0.5">
-              {formatFichas(moneyConfig.buyIn)}
+          </Tooltip>
+          <Tooltip
+            title="Entrada inicial"
+            content="Valor en fichas virtuales que aporta cada jugador al sentarse."
+            className="w-full"
+          >
+            <div className="w-full rounded-xl bg-[#181C26] border border-white/[0.06] p-3.5">
+              <div className="text-xs text-slate-400">Entrada</div>
+              <div className="text-lg font-bold font-mono-tabular text-white mt-0.5">
+                {formatFichas(moneyConfig.buyIn)}
+              </div>
             </div>
-          </div>
-          <div className="rounded-xl bg-[#181C26] border border-white/[0.06] p-3.5">
-            <div className="text-xs text-slate-400">Duración nivel</div>
-            <div className="text-lg font-bold font-mono-tabular text-white mt-0.5">
-              {currentLevel.durationMinutes} min
+          </Tooltip>
+          <Tooltip
+            title="Duración del nivel"
+            content="Minutos que dura el Nivel 1 antes de subir las ciegas."
+            className="w-full"
+          >
+            <div className="w-full rounded-xl bg-[#181C26] border border-white/[0.06] p-3.5">
+              <div className="text-xs text-slate-400">Duración nivel</div>
+              <div className="text-lg font-bold font-mono-tabular text-white mt-0.5">
+                {currentLevel.durationMinutes} min
+              </div>
             </div>
-          </div>
+          </Tooltip>
         </div>
 
         {breakdown.length > 0 && (
-          <div className="rounded-xl bg-[#0A0C10] border border-white/[0.06] p-4 space-y-3">
-            <div className="text-xs font-medium text-slate-400">
-              Fichas iniciales por jugador
+          <Tooltip
+            title="Reparto inicial de fichas"
+            content="Cantidad exacta de fichas de cada color que debes entregar a cada jugador al inicio."
+            className="w-full block"
+          >
+            <div className="w-full rounded-xl bg-[#0A0C10] border border-white/[0.06] p-4 space-y-3">
+              <div className="text-xs font-medium text-slate-400">
+                Fichas iniciales por jugador
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                {breakdown.map((b) => (
+                  <ChipBadge key={b.value} value={b.value} color={b.color} count={b.count} />
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              {breakdown.map((b) => (
-                <ChipBadge key={b.value} value={b.value} color={b.color} count={b.count} />
-              ))}
-            </div>
-          </div>
+          </Tooltip>
         )}
 
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-          <button
-            type="button"
-            onClick={() => {
-              setIntroDismissed(true);
-              onTogglePlayPause();
-            }}
-            className="min-h-[56px] px-8 rounded-2xl text-base font-semibold text-white flex items-center gap-2.5 shadow-lg transition-transform active:scale-[0.98] cursor-pointer"
-            style={{ backgroundColor: palette.primaryHex }}
+          <Tooltip
+            title="Comenzar partida"
+            content="Cierra esta bienvenida e inicia inmediatamente la cuenta atrás del Nivel 1."
           >
-            <Play className="w-5 h-5 fill-current" />
-            <span>Comenzar partida</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setIntroDismissed(true)}
-            className="min-h-[56px] px-5 rounded-2xl bg-[#181C26] border border-white/[0.08] text-sm font-medium text-slate-300 hover:text-white cursor-pointer"
+            <button
+              type="button"
+              onClick={() => {
+                setIntroDismissed(true);
+                onTogglePlayPause();
+              }}
+              className="min-h-[56px] px-8 rounded-2xl text-base font-semibold text-white flex items-center gap-2.5 shadow-lg transition-transform active:scale-[0.98] cursor-pointer"
+              style={{ backgroundColor: palette.primaryHex }}
+            >
+              <Play className="w-5 h-5 fill-current" />
+              <span>Comenzar partida</span>
+            </button>
+          </Tooltip>
+          <Tooltip
+            title="Abrir reloj en pausa"
+            content="Entra al reloj principal manteniendo el temporizador detenido hasta que pulses Iniciar."
           >
-            Abrir reloj en pausa
-          </button>
+            <button
+              type="button"
+              onClick={() => setIntroDismissed(true)}
+              className="min-h-[56px] px-5 rounded-2xl bg-[#181C26] border border-white/[0.08] text-sm font-medium text-slate-300 hover:text-white cursor-pointer"
+            >
+              Abrir reloj en pausa
+            </button>
+          </Tooltip>
         </div>
       </section>
     );
@@ -289,98 +333,114 @@ export const ClockView: React.FC<ClockViewProps> = ({
           {/* Floating Center Timer Capsule */}
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-4">
             <div className="pointer-events-auto flex items-center gap-3 sm:gap-5 rounded-3xl bg-[#0A0C10]/95 border border-white/15 px-4 py-3 sm:px-6 sm:py-4 shadow-2xl backdrop-blur-md">
-              <button
-                type="button"
-                onClick={onPrevLevel}
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.08] cursor-pointer"
-                aria-label="Nivel anterior"
-              >
-                <SkipBack className="w-5 h-5" />
-              </button>
-
-              <button
-                type="button"
-                onClick={onTogglePlayPause}
-                className="text-center cursor-pointer px-2"
-                title={isRunning ? 'Pulsa para pausar' : 'Pulsa para iniciar'}
-              >
-                <div
-                  className={`font-mono-tabular font-bold text-3xl sm:text-5xl leading-none ${timerColorClass}`}
+              <Tooltip title="Nivel anterior" content="Vuelve al nivel de ciegas anterior o reinicia el nivel actual.">
+                <button
+                  type="button"
+                  onClick={onPrevLevel}
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.08] cursor-pointer"
+                  aria-label="Nivel anterior"
                 >
-                  {formatTime(secondsRemaining)}
-                </div>
-                <div className="mt-1 text-[11px] font-medium text-slate-400">
-                  {isRunning ? 'En marcha · Toca para pausar' : 'Pausado · Toca para iniciar'}
-                </div>
-              </button>
+                  <SkipBack className="w-5 h-5" />
+                </button>
+              </Tooltip>
 
-              <button
-                type="button"
-                onClick={onNextLevel}
-                disabled={currentLevelIndex >= levels.length - 1}
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 cursor-pointer"
-                aria-label="Siguiente nivel"
-              >
-                <SkipForward className="w-5 h-5" />
-              </button>
+              <Tooltip title="Pausar / Iniciar" content="Toca el reloj para iniciar o pausar la cuenta atrás del nivel.">
+                <button
+                  type="button"
+                  onClick={onTogglePlayPause}
+                  className="text-center cursor-pointer px-2"
+                  title={isRunning ? 'Pulsa para pausar' : 'Pulsa para iniciar'}
+                >
+                  <div
+                    className={`font-mono-tabular font-bold text-3xl sm:text-5xl leading-none ${timerColorClass}`}
+                  >
+                    {formatTime(secondsRemaining)}
+                  </div>
+                  <div className="mt-1 text-[11px] font-medium text-slate-400">
+                    {isRunning ? 'En marcha · Toca para pausar' : 'Pausado · Toca para iniciar'}
+                  </div>
+                </button>
+              </Tooltip>
+
+              <Tooltip title="Siguiente nivel" content="Avanza manualmente al siguiente nivel de ciegas o descanso.">
+                <button
+                  type="button"
+                  onClick={onNextLevel}
+                  disabled={currentLevelIndex >= levels.length - 1}
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 cursor-pointer"
+                  aria-label="Siguiente nivel"
+                >
+                  <SkipForward className="w-5 h-5" />
+                </button>
+              </Tooltip>
             </div>
           </div>
 
           {/* Top Left/Right Floating Controls */}
           <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
             <div className="pointer-events-auto flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={onResetCurrentLevel}
-                className="min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl bg-black/45 hover:bg-black/65 text-white cursor-pointer"
-                aria-label="Reiniciar nivel"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={onStartShotClock}
-                className="min-h-[42px] px-3 flex items-center gap-1.5 rounded-xl bg-black/45 hover:bg-black/65 text-xs font-semibold text-white cursor-pointer"
-              >
-                <AlarmClock className="w-4 h-4" />
-                <span>Clock</span>
-              </button>
+              <Tooltip title="Reiniciar nivel" content="Devuelve el temporizador al tiempo completo del nivel actual." placement="bottom">
+                <button
+                  type="button"
+                  onClick={onResetCurrentLevel}
+                  className="min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl bg-black/45 hover:bg-black/65 text-white cursor-pointer"
+                  aria-label="Reiniciar nivel"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+              </Tooltip>
+              <Tooltip title="Call the Clock" content="Inicia un reloj de decisión rápido para apremiar una jugada." placement="bottom">
+                <button
+                  type="button"
+                  onClick={onStartShotClock}
+                  className="min-h-[42px] px-3 flex items-center gap-1.5 rounded-xl bg-black/45 hover:bg-black/65 text-xs font-semibold text-white cursor-pointer"
+                >
+                  <AlarmClock className="w-4 h-4" />
+                  <span>Clock</span>
+                </button>
+              </Tooltip>
             </div>
 
             <div className="pointer-events-auto flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={onToggleMute}
-                className="min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl bg-black/45 hover:bg-black/65 text-white cursor-pointer"
-                aria-label={settings.soundEnabled ? 'Silenciar' : 'Activar sonido'}
-              >
-                {settings.soundEnabled ? (
-                  <Volume2 className="w-4 h-4" />
-                ) : (
-                  <VolumeX className="w-4 h-4 text-slate-400" />
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={onToggleDisplayMode}
-                className="min-h-[42px] px-3 flex items-center gap-1.5 rounded-xl bg-black/45 hover:bg-black/65 text-xs font-medium text-white cursor-pointer"
-                title="Volver a vista completa"
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                <span>Estándar</span>
-              </button>
-              <button
-                type="button"
-                onClick={onToggleFullscreen}
-                className="min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl bg-black/45 hover:bg-black/65 text-white cursor-pointer"
-                aria-label="Pantalla completa"
-              >
-                {isFullscreen ? (
-                  <Minimize2 className="w-4 h-4" />
-                ) : (
-                  <Maximize2 className="w-4 h-4" />
-                )}
-              </button>
+              <Tooltip title="Sonido" content="Activa o silencia las alertas sonoras de la partida." placement="bottom">
+                <button
+                  type="button"
+                  onClick={onToggleMute}
+                  className="min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl bg-black/45 hover:bg-black/65 text-white cursor-pointer"
+                  aria-label={settings.soundEnabled ? 'Silenciar' : 'Activar sonido'}
+                >
+                  {settings.soundEnabled ? (
+                    <Volume2 className="w-4 h-4" />
+                  ) : (
+                    <VolumeX className="w-4 h-4 text-slate-400" />
+                  )}
+                </button>
+              </Tooltip>
+              <Tooltip title="Vista Estándar" content="Vuelve al tablero completo con estadísticas, premios y lista de niveles." placement="bottom">
+                <button
+                  type="button"
+                  onClick={onToggleDisplayMode}
+                  className="min-h-[42px] px-3 flex items-center gap-1.5 rounded-xl bg-black/45 hover:bg-black/65 text-xs font-medium text-white cursor-pointer"
+                  title="Volver a vista completa"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Estándar</span>
+                </button>
+              </Tooltip>
+              <Tooltip title="Pantalla completa" content="Expande o contrae el reloj al 100% de la pantalla." placement="bottom">
+                <button
+                  type="button"
+                  onClick={onToggleFullscreen}
+                  className="min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl bg-black/45 hover:bg-black/65 text-white cursor-pointer"
+                  aria-label="Pantalla completa"
+                >
+                  {isFullscreen ? (
+                    <Minimize2 className="w-4 h-4" />
+                  ) : (
+                    <Maximize2 className="w-4 h-4" />
+                  )}
+                </button>
+              </Tooltip>
             </div>
           </div>
 
@@ -418,7 +478,7 @@ export const ClockView: React.FC<ClockViewProps> = ({
     >
       {/* Top contextual strip */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
+        <div data-tour="clock-header" className="min-w-0">
           {editingTitle ? (
             <input
               type="text"
@@ -432,14 +492,20 @@ export const ClockView: React.FC<ClockViewProps> = ({
               className="rounded-lg bg-[#0A0C10] border border-white/20 px-2.5 py-1 text-sm font-semibold text-white focus:outline-none"
             />
           ) : (
-            <button
-              type="button"
-              onClick={() => setEditingTitle(true)}
-              className="text-xs font-medium text-slate-400 hover:text-white transition-colors truncate block cursor-pointer"
-              title="Haz clic para editar el nombre del torneo"
+            <Tooltip
+              title="Nombre del torneo"
+              content="Toca aquí para personalizar el nombre de tu partida o liga."
+              placement="bottom"
             >
-              {tournamentTitle}
-            </button>
+              <button
+                type="button"
+                onClick={() => setEditingTitle(true)}
+                className="text-xs font-medium text-slate-400 hover:text-white transition-colors truncate block cursor-pointer"
+                title="Haz clic para editar el nombre del torneo"
+              >
+                {tournamentTitle}
+              </button>
+            </Tooltip>
           )}
 
           <div className="flex flex-wrap items-center gap-2 text-sm sm:text-base font-medium text-slate-300 mt-0.5">
@@ -467,52 +533,76 @@ export const ClockView: React.FC<ClockViewProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            type="button"
-            onClick={onStartShotClock}
-            className="min-h-[42px] px-3 flex items-center gap-1.5 rounded-xl bg-[#181C26] hover:bg-[#222735] border border-white/[0.08] text-xs font-semibold text-amber-300 transition-colors cursor-pointer"
-            title="Activar reloj de decisión (Call the Clock)"
+        <div data-tour="call-clock" className="flex items-center gap-1.5 shrink-0">
+          <Tooltip
+            title="Call the Clock"
+            content="Activa una cuenta atrás de decisión (15–60s) con alarma propia cuando un jugador tarda en actuar."
+            placement="bottom"
           >
-            <AlarmClock className="w-4 h-4" />
-            <span className="hidden sm:inline">Call Clock</span>
-          </button>
+            <button
+              type="button"
+              onClick={onStartShotClock}
+              className="min-h-[42px] px-3 flex items-center gap-1.5 rounded-xl bg-[#181C26] hover:bg-[#222735] border border-white/[0.08] text-xs font-semibold text-amber-300 transition-colors cursor-pointer"
+              title="Activar reloj de decisión (Call the Clock)"
+            >
+              <AlarmClock className="w-4 h-4" />
+              <span className="hidden sm:inline">Call Clock</span>
+            </button>
+          </Tooltip>
 
-          <button
-            type="button"
-            onClick={onToggleDisplayMode}
-            className="min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
-            title="Cambiar a Vista Mesa Minimalista"
-            aria-label="Cambiar a Vista Mesa Minimalista"
+          <Tooltip
+            title="Vista Mesa Minimalista"
+            content="Cambia a pantalla dividida gigante (Ciega Pequeña / Ciega Grande) ideal para el centro de la mesa."
+            placement="bottom"
           >
-            <Columns2 className="w-5 h-5" />
-          </button>
+            <button
+              type="button"
+              onClick={onToggleDisplayMode}
+              className="min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+              title="Cambiar a Vista Mesa Minimalista"
+              aria-label="Cambiar a Vista Mesa Minimalista"
+            >
+              <Columns2 className="w-5 h-5" />
+            </button>
+          </Tooltip>
 
-          <button
-            type="button"
-            onClick={onToggleMute}
-            className="min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
-            aria-label={settings.soundEnabled ? 'Silenciar sonido' : 'Activar sonido'}
+          <Tooltip
+            title="Silenciar / Activar sonido"
+            content="Activa o silencia al instante los avisos de cambio de ciegas, descansos y cuenta regresiva."
+            placement="bottom"
           >
-            {settings.soundEnabled ? (
-              <Volume2 className="w-5 h-5" />
-            ) : (
-              <VolumeX className="w-5 h-5 text-slate-500" />
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={onToggleMute}
+              className="min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+              aria-label={settings.soundEnabled ? 'Silenciar sonido' : 'Activar sonido'}
+            >
+              {settings.soundEnabled ? (
+                <Volume2 className="w-5 h-5" />
+              ) : (
+                <VolumeX className="w-5 h-5 text-slate-500" />
+              )}
+            </button>
+          </Tooltip>
 
-          <button
-            type="button"
-            onClick={onToggleFullscreen}
-            className="min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
-            aria-label={fullscreenMode ? 'Salir de pantalla completa' : 'Pantalla completa'}
+          <Tooltip
+            title="Pantalla completa (Tecla F)"
+            content="Amplía el tablero del reloj a toda la pantalla para verlo desde lejos o en TV."
+            placement="bottom"
           >
-            {fullscreenMode ? (
-              <Minimize2 className="w-5 h-5" />
-            ) : (
-              <Maximize2 className="w-5 h-5" />
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={onToggleFullscreen}
+              className="min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+              aria-label={fullscreenMode ? 'Salir de pantalla completa' : 'Pantalla completa'}
+            >
+              {fullscreenMode ? (
+                <Minimize2 className="w-5 h-5" />
+              ) : (
+                <Maximize2 className="w-5 h-5" />
+              )}
+            </button>
+          </Tooltip>
         </div>
       </div>
 
@@ -524,135 +614,171 @@ export const ClockView: React.FC<ClockViewProps> = ({
       )}
 
       {/* Giant Countdown Timer */}
-      <div className="my-4 sm:my-7 text-center">
-        <div
-          className={`font-mono-tabular font-bold tracking-tight leading-none select-none transition-colors duration-200 ${timerColorClass} ${
-            fullscreenMode
-              ? 'text-[clamp(4.5rem,17vw,10.5rem)]'
-              : 'text-[clamp(3.75rem,14vw,7rem)]'
-          }`}
+      <div data-tour="clock-timer" className="my-4 sm:my-7 text-center">
+        <Tooltip
+          title="Temporizador del nivel"
+          content="Tiempo restante antes de que suban las ciegas o empiece el descanso. Cambia de color en el último minuto y los últimos 10s."
         >
-          {formatTime(secondsRemaining)}
-        </div>
+          <div
+            className={`font-mono-tabular font-bold tracking-tight leading-none select-none transition-colors duration-200 ${timerColorClass} ${
+              fullscreenMode
+                ? 'text-[clamp(4.5rem,17vw,10.5rem)]'
+                : 'text-[clamp(3.75rem,14vw,7rem)]'
+            }`}
+          >
+            {formatTime(secondsRemaining)}
+          </div>
+        </Tooltip>
 
         {/* Interactive Progress Bar */}
         <div className="mt-4 sm:mt-6 max-w-xl mx-auto">
-          <div
-            onClick={handleBarClick}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                onAdjustTime(-30);
-              } else if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                onAdjustTime(30);
-              }
-            }}
-            role="slider"
-            aria-label="Progreso del nivel"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(progressRatio * 100)}
-            tabIndex={0}
-            className="h-3 w-full rounded-full bg-white/[0.07] overflow-hidden cursor-pointer relative"
-            title="Haz clic para ajustar el tiempo del nivel"
+          <Tooltip
+            title="Barra de progreso interactiva"
+            content="Haz clic en cualquier punto de la barra (o usa flechas ← / → al enfocarla) para adelantar o atrasar el reloj del nivel."
+            className="w-full block"
           >
             <div
-              className="h-full rounded-full transition-all duration-200"
-              style={{
-                width: `${progressRatio * 100}%`,
-                backgroundColor: isBreak ? '#FBBF24' : palette.primaryHex,
+              onClick={handleBarClick}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowLeft') {
+                  e.preventDefault();
+                  onAdjustTime(-30);
+                } else if (e.key === 'ArrowRight') {
+                  e.preventDefault();
+                  onAdjustTime(30);
+                }
               }}
-            />
-          </div>
+              role="slider"
+              aria-label="Progreso del nivel"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(progressRatio * 100)}
+              tabIndex={0}
+              className="h-3 w-full rounded-full bg-white/[0.07] overflow-hidden cursor-pointer relative"
+              title="Haz clic para ajustar el tiempo del nivel"
+            >
+              <div
+                className="h-full rounded-full transition-all duration-200"
+                style={{
+                  width: `${progressRatio * 100}%`,
+                  backgroundColor: isBreak ? '#FBBF24' : palette.primaryHex,
+                }}
+              />
+            </div>
+          </Tooltip>
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 font-mono-tabular">
             <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => onAdjustTime(-60)}
-                className="min-h-[34px] px-2 rounded-lg hover:bg-white/[0.06] hover:text-white cursor-pointer"
-              >
-                -1m
-              </button>
-              <button
-                type="button"
-                onClick={() => onAdjustTime(60)}
-                className="min-h-[34px] px-2 rounded-lg hover:bg-white/[0.06] hover:text-white cursor-pointer"
-              >
-                +1m
-              </button>
-              <button
-                type="button"
-                onClick={onResetCurrentLevel}
-                className="min-h-[34px] px-2 flex items-center gap-1 rounded-lg hover:bg-white/[0.06] hover:text-white cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reiniciar</span>
-              </button>
+              <Tooltip title="Restar 1 minuto" content="Quita 60 segundos al reloj del nivel actual.">
+                <button
+                  type="button"
+                  onClick={() => onAdjustTime(-60)}
+                  className="min-h-[34px] px-2 rounded-lg hover:bg-white/[0.06] hover:text-white cursor-pointer"
+                >
+                  -1m
+                </button>
+              </Tooltip>
+              <Tooltip title="Añadir 1 minuto" content="Suma 60 segundos extra al nivel actual.">
+                <button
+                  type="button"
+                  onClick={() => onAdjustTime(60)}
+                  className="min-h-[34px] px-2 rounded-lg hover:bg-white/[0.06] hover:text-white cursor-pointer"
+                >
+                  +1m
+                </button>
+              </Tooltip>
+              <Tooltip title="Reiniciar nivel actual" content="Restablece los minutos completos de este nivel sin perder los datos de la mesa.">
+                <button
+                  type="button"
+                  onClick={onResetCurrentLevel}
+                  className="min-h-[34px] px-2 flex items-center gap-1 rounded-lg hover:bg-white/[0.06] hover:text-white cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reiniciar</span>
+                </button>
+              </Tooltip>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
               {secondsToNextBreak !== null && (
-                <span>Descanso en {formatTime(secondsToNextBreak)}</span>
+                <Tooltip title="Próximo descanso" content="Tiempo restante hasta la siguiente pausa programada en la estructura.">
+                  <span>Descanso en {formatTime(secondsToNextBreak)}</span>
+                </Tooltip>
               )}
               {secondsToRebuyEnd !== null && (
-                <span>
-                  {secondsToRebuyEnd > 0
-                    ? `Rebuys: ${formatTime(secondsToRebuyEnd)}`
-                    : 'Rebuys cerrados'}
-                </span>
+                <Tooltip title="Ventana de recompras" content="Tiempo que queda para permitir rebuys antes del nivel límite configurado.">
+                  <span>
+                    {secondsToRebuyEnd > 0
+                      ? `Rebuys: ${formatTime(secondsToRebuyEnd)}`
+                      : 'Rebuys cerrados'}
+                  </span>
+                </Tooltip>
               )}
-              <span>Total: {formatTime(totalElapsedSeconds)}</span>
+              <Tooltip title="Tiempo total" content="Duración total transcurrida desde que comenzó la partida.">
+                <span>Total: {formatTime(totalElapsedSeconds)}</span>
+              </Tooltip>
             </div>
           </div>
         </div>
       </div>
 
       {/* Primary Playback Controls */}
-      <div className="flex items-center justify-center gap-4 sm:gap-6">
-        <button
-          type="button"
-          onClick={onPrevLevel}
-          className="min-h-[54px] min-w-[54px] sm:min-h-[60px] sm:min-w-[60px] flex items-center justify-center rounded-2xl bg-[#181C26] hover:bg-[#222735] border border-white/[0.08] text-slate-200 active:scale-[0.96] transition-all cursor-pointer"
-          aria-label="Nivel anterior"
-        >
-          <SkipBack className="w-6 h-6" />
-        </button>
+      <div data-tour="clock-playback" className="flex items-center justify-center gap-4 sm:gap-6">
+        <Tooltip title="Nivel anterior (←)" content="Retrocede al nivel de ciegas anterior o reinicia el Nivel 1.">
+          <button
+            type="button"
+            onClick={onPrevLevel}
+            className="min-h-[54px] min-w-[54px] sm:min-h-[60px] sm:min-w-[60px] flex items-center justify-center rounded-2xl bg-[#181C26] hover:bg-[#222735] border border-white/[0.08] text-slate-200 active:scale-[0.96] transition-all cursor-pointer"
+            aria-label="Nivel anterior"
+          >
+            <SkipBack className="w-6 h-6" />
+          </button>
+        </Tooltip>
 
-        <button
-          type="button"
-          onClick={onTogglePlayPause}
-          className="min-h-[62px] min-w-[148px] sm:min-h-[70px] sm:min-w-[184px] flex items-center justify-center gap-3 rounded-2xl text-white font-semibold text-base sm:text-lg shadow-lg transition-all active:scale-[0.97] cursor-pointer px-6"
-          style={{ backgroundColor: palette.primaryHex }}
-          aria-label={isRunning ? 'Pausar reloj' : 'Iniciar reloj'}
+        <Tooltip
+          title={isRunning ? 'Pausar reloj (Espacio)' : 'Iniciar reloj (Espacio)'}
+          content={
+            isRunning
+              ? 'Detiene temporalmente el cronómetro del torneo.'
+              : 'Inicia o reanuda la cuenta atrás del nivel con avisos sonoros automáticos.'
+          }
         >
-          {isRunning ? (
-            <>
-              <Pause className="w-6 h-6 fill-current" />
-              <span>Pausar</span>
-            </>
-          ) : (
-            <>
-              <Play className="w-6 h-6 fill-current" />
-              <span>Iniciar</span>
-            </>
-          )}
-        </button>
+          <button
+            type="button"
+            onClick={onTogglePlayPause}
+            className="min-h-[62px] min-w-[148px] sm:min-h-[70px] sm:min-w-[184px] flex items-center justify-center gap-3 rounded-2xl text-white font-semibold text-base sm:text-lg shadow-lg transition-all active:scale-[0.97] cursor-pointer px-6"
+            style={{ backgroundColor: palette.primaryHex }}
+            aria-label={isRunning ? 'Pausar reloj' : 'Iniciar reloj'}
+          >
+            {isRunning ? (
+              <>
+                <Pause className="w-6 h-6 fill-current" />
+                <span>Pausar</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-6 h-6 fill-current" />
+                <span>Iniciar</span>
+              </>
+            )}
+          </button>
+        </Tooltip>
 
-        <button
-          type="button"
-          onClick={onNextLevel}
-          disabled={currentLevelIndex >= levels.length - 1}
-          className="min-h-[54px] min-w-[54px] sm:min-h-[60px] sm:min-w-[60px] flex items-center justify-center rounded-2xl bg-[#181C26] hover:bg-[#222735] disabled:opacity-35 disabled:pointer-events-none border border-white/[0.08] text-slate-200 active:scale-[0.96] transition-all cursor-pointer"
-          aria-label="Siguiente nivel"
-        >
-          <SkipForward className="w-6 h-6" />
-        </button>
+        <Tooltip title="Siguiente nivel (→)" content="Salta inmediatamente al siguiente nivel de ciegas o descanso.">
+          <button
+            type="button"
+            onClick={onNextLevel}
+            disabled={currentLevelIndex >= levels.length - 1}
+            className="min-h-[54px] min-w-[54px] sm:min-h-[60px] sm:min-w-[60px] flex items-center justify-center rounded-2xl bg-[#181C26] hover:bg-[#222735] disabled:opacity-35 disabled:pointer-events-none border border-white/[0.08] text-slate-200 active:scale-[0.96] transition-all cursor-pointer"
+            aria-label="Siguiente nivel"
+          >
+            <SkipForward className="w-6 h-6" />
+          </button>
+        </Tooltip>
       </div>
 
       {/* Previous / Current / Next Blinds + Ante Readout */}
-      <div className="mt-6 sm:mt-7 pt-5 border-t border-white/[0.08]">
+      <div data-tour="clock-blinds" className="mt-6 sm:mt-7 pt-5 border-t border-white/[0.08]">
         {isBreak ? (
           <div className="text-center space-y-2">
             <p className="text-xs font-medium text-amber-300/90">Pausa programada en mesa</p>
@@ -676,65 +802,93 @@ export const ClockView: React.FC<ClockViewProps> = ({
                 anteActive ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1'
               } items-center text-center`}
             >
-              <div className={anteActive ? 'sm:col-span-2' : ''}>
-                <div className="text-xs sm:text-sm font-medium text-slate-400">
-                  Ciegas actuales
-                </div>
-                <div
-                  className={`mt-1 font-mono-tabular font-bold text-white tracking-tight ${
-                    fullscreenMode ? 'text-5xl sm:text-7xl' : 'text-4xl sm:text-6xl'
-                  }`}
-                >
-                  {formatChipValue(currentLevel.smallBlind)} /{' '}
-                  {formatChipValue(currentLevel.bigBlind)}
-                </div>
-              </div>
-
-              {anteActive && (
-                <div className="pt-3 sm:pt-0 sm:pl-6 border-t sm:border-t-0 sm:border-l border-white/[0.08]">
+              <Tooltip
+                title="Ciegas actuales (SB / BB)"
+                content="Apuestas obligatorias de esta ronda: Ciega Pequeña a la izquierda de la barra y Ciega Grande a la derecha."
+                className={`${anteActive ? 'sm:col-span-2' : ''} w-full justify-center`}
+              >
+                <div className="w-full">
                   <div className="text-xs sm:text-sm font-medium text-slate-400">
-                    {anteLabel}
+                    Ciegas actuales
                   </div>
                   <div
-                    className={`mt-1 font-mono-tabular font-bold text-slate-100 ${
-                      fullscreenMode ? 'text-4xl sm:text-6xl' : 'text-3xl sm:text-5xl'
+                    className={`mt-1 font-mono-tabular font-bold text-white tracking-tight ${
+                      fullscreenMode ? 'text-5xl sm:text-7xl' : 'text-4xl sm:text-6xl'
                     }`}
                   >
-                    {formatChipValue(currentLevel.ante)}
+                    {formatChipValue(currentLevel.smallBlind)} /{' '}
+                    {formatChipValue(currentLevel.bigBlind)}
                   </div>
                 </div>
+              </Tooltip>
+
+              {anteActive && (
+                <Tooltip
+                  title={anteLabel}
+                  content={
+                    settings.anteMode === 'big_blind'
+                      ? 'Big Blind Ante: solo la Ciega Grande paga este ante único por mano.'
+                      : 'Ante por jugador: cada jugador en la mano aporta estas fichas al bote inicial.'
+                  }
+                  className="w-full justify-center"
+                >
+                  <div className="w-full pt-3 sm:pt-0 sm:pl-6 border-t sm:border-t-0 sm:border-l border-white/[0.08]">
+                    <div className="text-xs sm:text-sm font-medium text-slate-400">
+                      {anteLabel}
+                    </div>
+                    <div
+                      className={`mt-1 font-mono-tabular font-bold text-slate-100 ${
+                        fullscreenMode ? 'text-4xl sm:text-6xl' : 'text-3xl sm:text-5xl'
+                      }`}
+                    >
+                      {formatChipValue(currentLevel.ante)}
+                    </div>
+                  </div>
+                </Tooltip>
               )}
             </div>
 
             {/* Previous & Next Blinds Row */}
             <div className="grid grid-cols-2 gap-4 pt-3 border-t border-white/[0.06] text-center font-mono-tabular">
-              <div>
-                <div className="text-[11px] font-sans text-slate-500">Anterior</div>
-                <div className="text-sm sm:text-base font-semibold text-slate-400 mt-0.5">
-                  {previousLevel
-                    ? `${formatChipValue(previousLevel.smallBlind)} / ${formatChipValue(previousLevel.bigBlind)}`
-                    : '—'}
+              <Tooltip
+                title="Nivel anterior"
+                content="Ciegas que estaban vigentes en la ronda pasada."
+                className="w-full justify-center"
+              >
+                <div className="w-full">
+                  <div className="text-[11px] font-sans text-slate-500">Anterior</div>
+                  <div className="text-sm sm:text-base font-semibold text-slate-400 mt-0.5">
+                    {previousLevel
+                      ? `${formatChipValue(previousLevel.smallBlind)} / ${formatChipValue(previousLevel.bigBlind)}`
+                      : '—'}
+                  </div>
                 </div>
-              </div>
+              </Tooltip>
 
-              <div>
-                <div className="text-[11px] font-sans text-slate-500">Siguiente</div>
-                <div className="text-sm sm:text-base font-semibold text-slate-200 mt-0.5">
-                  {nextLevel ? (
-                    nextLevel.type === 'break' ? (
-                      <span className="text-amber-300">
-                        {nextLevel.label || 'Descanso'} ({nextLevel.durationMinutes}m)
-                      </span>
+              <Tooltip
+                title="Siguiente ronda"
+                content="Ciegas o descanso que comenzarán automáticamente cuando este cronómetro llegue a 00:00."
+                className="w-full justify-center"
+              >
+                <div className="w-full">
+                  <div className="text-[11px] font-sans text-slate-500">Siguiente</div>
+                  <div className="text-sm sm:text-base font-semibold text-slate-200 mt-0.5">
+                    {nextLevel ? (
+                      nextLevel.type === 'break' ? (
+                        <span className="text-amber-300">
+                          {nextLevel.label || 'Descanso'} ({nextLevel.durationMinutes}m)
+                        </span>
+                      ) : (
+                        `${formatChipValue(nextLevel.smallBlind)} / ${formatChipValue(nextLevel.bigBlind)}${
+                          anteActive && nextLevel.ante > 0 ? ` (${formatChipValue(nextLevel.ante)})` : ''
+                        }`
+                      )
                     ) : (
-                      `${formatChipValue(nextLevel.smallBlind)} / ${formatChipValue(nextLevel.bigBlind)}${
-                        anteActive && nextLevel.ante > 0 ? ` (${formatChipValue(nextLevel.ante)})` : ''
-                      }`
-                    )
-                  ) : (
-                    'Último nivel'
-                  )}
+                      'Último nivel'
+                    )}
+                  </div>
                 </div>
-              </div>
+              </Tooltip>
             </div>
           </div>
         )}
@@ -793,7 +947,10 @@ export const ClockView: React.FC<ClockViewProps> = ({
 
           {/* Quick Live Table Controls (+Player / +Rebuy / +Add-on / -Player / Undo) */}
           {settings.showTableStats && (
-            <div className="rounded-2xl bg-[#12151C] border border-white/[0.08] p-4 sm:p-5 space-y-4">
+            <div
+              data-tour="table-stats"
+              className="rounded-2xl bg-[#12151C] border border-white/[0.08] p-4 sm:p-5 space-y-4"
+            >
               <TableStatsBlock
                 tableStats={tableStats}
                 averageStack={averageStack}
@@ -811,47 +968,57 @@ export const ClockView: React.FC<ClockViewProps> = ({
         </div>
 
         {/* Right Sidebar: Prize Pool, Chips, Hand Rankings, Level Ladder */}
-        <aside className="lg:col-span-4 flex flex-col gap-5">
+        <aside data-tour="clock-sidebar" className="lg:col-span-4 flex flex-col gap-5">
           {settings.showPayoutsOnClock && (
-            <div className="rounded-2xl bg-[#12151C] border border-white/[0.08] p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                  <Trophy className="w-4 h-4 text-amber-400" />
-                  <span>Bote y premios</span>
-                </div>
-                <span className="text-lg font-bold font-mono-tabular text-emerald-400">
-                  {formatFichas(prizePool)}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                {payoutBreakdown.map((p) => (
-                  <div
-                    key={p.place}
-                    className="rounded-xl bg-[#181C26] border border-white/[0.06] py-2 px-1"
-                  >
-                    <div className="text-[11px] text-slate-400">{p.place}.º ({p.percentage}%)</div>
-                    <div className="text-sm font-bold font-mono-tabular text-white">
-                      {formatChipValue(p.amount)}
-                    </div>
-                    <div className="text-[10px] text-slate-500">fichas</div>
+            <Tooltip
+              title="Bote y reparto de premios"
+              content="Calculado en vivo según entradas, rebuys y add-ons en fichas. Puedes editar los porcentajes en la pestaña Estructura."
+              className="w-full block"
+            >
+              <div className="w-full rounded-2xl bg-[#12151C] border border-white/[0.08] p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                    <Trophy className="w-4 h-4 text-amber-400" />
+                    <span>Bote y premios</span>
                   </div>
-                ))}
+                  <span className="text-lg font-bold font-mono-tabular text-emerald-400">
+                    {formatFichas(prizePool)}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  {payoutBreakdown.map((p) => (
+                    <div
+                      key={p.place}
+                      className="rounded-xl bg-[#181C26] border border-white/[0.06] py-2 px-1"
+                    >
+                      <div className="text-[11px] text-slate-400">{p.place}.º ({p.percentage}%)</div>
+                      <div className="text-sm font-bold font-mono-tabular text-white">
+                        {formatChipValue(p.amount)}
+                      </div>
+                      <div className="text-[10px] text-slate-500">fichas</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            </Tooltip>
           )}
 
           {settings.showChipLegend && (
             <div className="rounded-2xl bg-[#12151C] border border-white/[0.08] p-5 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-white">Fichas en mesa</span>
-                <button
-                  type="button"
-                  onClick={() => setShowHandsModal(true)}
-                  className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-white cursor-pointer"
-                >
-                  <Award className="w-3.5 h-3.5" />
-                  <span>Guía de manos</span>
-                </button>
+                <Tooltip title="Leyenda de fichas" content="Valores de cada color de ficha configurados para esta partida.">
+                  <span className="text-sm font-semibold text-white">Fichas en mesa</span>
+                </Tooltip>
+                <Tooltip title="Guía rápida de manos" content="Abre una ventana con todas las jugadas de póker ordenadas de mayor a menor.">
+                  <button
+                    type="button"
+                    onClick={() => setShowHandsModal(true)}
+                    className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    <Award className="w-3.5 h-3.5" />
+                    <span>Guía de manos</span>
+                  </button>
+                </Tooltip>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 {chips.map((c) => (
@@ -883,15 +1050,19 @@ export const ClockView: React.FC<ClockViewProps> = ({
           {/* Upcoming Levels Ladder */}
           <div className="flex-1 flex flex-col rounded-2xl bg-[#12151C] border border-white/[0.08] p-5">
             <div className="flex items-center justify-between gap-2 pb-3 border-b border-white/[0.08]">
-              <h2 className="text-sm font-semibold text-white">Progresión de niveles</h2>
+              <Tooltip title="Escalera de niveles" content="Toca cualquier nivel o descanso de la lista para saltar directamente a él.">
+                <h2 className="text-sm font-semibold text-white">Progresión de niveles</h2>
+              </Tooltip>
               {!confirmResetTourney ? (
-                <button
-                  type="button"
-                  onClick={() => setConfirmResetTourney(true)}
-                  className="text-xs font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap cursor-pointer"
-                >
-                  Reiniciar partida
-                </button>
+                <Tooltip title="Reiniciar torneo" content="Devuelve el reloj al Nivel 1 y pone el tiempo total a 00:00 (pide confirmación).">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmResetTourney(true)}
+                    className="text-xs font-medium text-slate-400 hover:text-white transition-colors whitespace-nowrap cursor-pointer"
+                  >
+                    Reiniciar partida
+                  </button>
+                </Tooltip>
               ) : (
                 <div className="flex items-center gap-2">
                   <button
@@ -925,48 +1096,54 @@ export const ClockView: React.FC<ClockViewProps> = ({
                 }
 
                 return (
-                  <button
+                  <Tooltip
                     key={lvl.id}
-                    type="button"
-                    onClick={() => onJumpToLevel(idx)}
-                    className={`w-full min-h-[42px] flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-left text-sm transition-colors cursor-pointer ${
-                      isCurrent
-                        ? 'text-white border'
-                        : isPast
-                          ? 'text-slate-500 hover:bg-white/[0.04] hover:text-slate-300'
-                          : 'text-slate-200 hover:bg-white/[0.04]'
-                    }`}
-                    style={
-                      isCurrent
-                        ? {
-                            backgroundColor: palette.softBgHex,
-                            borderColor: palette.borderHex,
-                          }
-                        : undefined
-                    }
+                    title={lvl.type === 'break' ? lvl.label || 'Descanso' : `Saltar al Nivel ${playIdx}`}
+                    content="Pulsa para activar inmediatamente esta ronda en el reloj."
+                    className="w-full block"
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="font-mono-tabular text-xs w-7 text-slate-400 shrink-0">
-                        {lvl.type === 'break' ? 'DES' : `N${playIdx}`}
-                      </span>
-                      {lvl.type === 'break' ? (
-                        <span className="text-amber-300 font-medium truncate">
-                          {lvl.label || 'Descanso'}
+                    <button
+                      type="button"
+                      onClick={() => onJumpToLevel(idx)}
+                      className={`w-full min-h-[42px] flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-left text-sm transition-colors cursor-pointer ${
+                        isCurrent
+                          ? 'text-white border'
+                          : isPast
+                            ? 'text-slate-500 hover:bg-white/[0.04] hover:text-slate-300'
+                            : 'text-slate-200 hover:bg-white/[0.04]'
+                      }`}
+                      style={
+                        isCurrent
+                          ? {
+                              backgroundColor: palette.softBgHex,
+                              borderColor: palette.borderHex,
+                            }
+                          : undefined
+                      }
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="font-mono-tabular text-xs w-7 text-slate-400 shrink-0">
+                          {lvl.type === 'break' ? 'DES' : `N${playIdx}`}
                         </span>
-                      ) : (
-                        <span className="font-mono-tabular font-semibold whitespace-nowrap">
-                          {formatChipValue(lvl.smallBlind)}/{formatChipValue(lvl.bigBlind)}
-                        </span>
-                      )}
-                    </div>
+                        {lvl.type === 'break' ? (
+                          <span className="text-amber-300 font-medium truncate">
+                            {lvl.label || 'Descanso'}
+                          </span>
+                        ) : (
+                          <span className="font-mono-tabular font-semibold whitespace-nowrap">
+                            {formatChipValue(lvl.smallBlind)}/{formatChipValue(lvl.bigBlind)}
+                          </span>
+                        )}
+                      </div>
 
-                    <div className="flex items-center gap-3 text-xs text-slate-400 font-mono-tabular shrink-0">
-                      {lvl.type === 'level' && anteActive && lvl.ante > 0 && (
-                        <span>A {formatChipValue(lvl.ante)}</span>
-                      )}
-                      <span>{lvl.durationMinutes}m</span>
-                    </div>
-                  </button>
+                      <div className="flex items-center gap-3 text-xs text-slate-400 font-mono-tabular shrink-0">
+                        {lvl.type === 'level' && anteActive && lvl.ante > 0 && (
+                          <span>A {formatChipValue(lvl.ante)}</span>
+                        )}
+                        <span>{lvl.durationMinutes}m</span>
+                      </div>
+                    </button>
+                  </Tooltip>
                 );
               })}
             </div>
@@ -994,14 +1171,16 @@ export const ClockView: React.FC<ClockViewProps> = ({
           <div className="w-full max-w-lg rounded-2xl bg-[#12151C] border border-white/10 p-5 sm:p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-white">Orden de manos de póker</h3>
-              <button
-                type="button"
-                onClick={() => setShowHandsModal(false)}
-                className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl text-slate-400 hover:text-white cursor-pointer"
-                aria-label="Cerrar guía de manos"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <Tooltip title="Cerrar guía" content="Vuelve al tablero del reloj.">
+                <button
+                  type="button"
+                  onClick={() => setShowHandsModal(false)}
+                  className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl text-slate-400 hover:text-white cursor-pointer"
+                  aria-label="Cerrar guía de manos"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </Tooltip>
             </div>
             <div className="divide-y divide-white/[0.06]">
               {HAND_RANKINGS.map((h) => (
@@ -1069,20 +1248,24 @@ const ShotClockOverlay: React.FC<ShotClockOverlayProps> = ({
         </div>
 
         <div className="flex items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={onRestart}
-            className="min-h-[48px] px-5 rounded-xl bg-[#181C26] hover:bg-[#222735] border border-white/10 text-sm font-semibold text-white cursor-pointer"
-          >
-            Reiniciar ({total}s)
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-[48px] px-6 rounded-xl bg-rose-600 hover:bg-rose-500 text-sm font-semibold text-white cursor-pointer"
-          >
-            Cerrar
-          </button>
+          <Tooltip title="Reiniciar reloj de turno" content="Vuelve a empezar la cuenta atrás completa para la jugada.">
+            <button
+              type="button"
+              onClick={onRestart}
+              className="min-h-[48px] px-5 rounded-xl bg-[#181C26] hover:bg-[#222735] border border-white/10 text-sm font-semibold text-white cursor-pointer"
+            >
+              Reiniciar ({total}s)
+            </button>
+          </Tooltip>
+          <Tooltip title="Cerrar Call the Clock" content="Detiene la cuenta regresiva y regresa al reloj del torneo.">
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-[48px] px-6 rounded-xl bg-rose-600 hover:bg-rose-500 text-sm font-semibold text-white cursor-pointer"
+            >
+              Cerrar
+            </button>
+          </Tooltip>
         </div>
       </div>
     </div>
@@ -1123,134 +1306,162 @@ const TableStatsBlock: React.FC<TableStatsBlockProps> = ({
         </div>
 
         <div className="flex items-center gap-3 text-xs text-slate-400 font-mono-tabular">
-          <span>
-            Stack prom: <strong className="text-white">{formatChipValue(averageStack)}</strong>
-            {averageBigBlinds !== null && <span> ({averageBigBlinds} BB)</span>}
-          </span>
+          <Tooltip title="Stack promedio" content="Media de fichas por jugador activo y su equivalencia en Big Blinds (BB) actuales.">
+            <span>
+              Stack prom: <strong className="text-white">{formatChipValue(averageStack)}</strong>
+              {averageBigBlinds !== null && <span> ({averageBigBlinds} BB)</span>}
+            </span>
+          </Tooltip>
           {undoCount > 0 && (
-            <button
-              type="button"
-              onClick={onUndo}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 font-sans cursor-pointer"
-              title="Deshacer último cambio de mesa"
-            >
-              <Undo2 className="w-3.5 h-3.5" />
-              <span>Deshacer</span>
-            </button>
+            <Tooltip title="Deshacer" content="Revierte el último cambio de jugador, rebuy o add-on realizado en la mesa.">
+              <button
+                type="button"
+                onClick={onUndo}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 font-sans cursor-pointer"
+                title="Deshacer último cambio de mesa"
+              >
+                <Undo2 className="w-3.5 h-3.5" />
+                <span>Deshacer</span>
+              </button>
+            </Tooltip>
           )}
         </div>
       </div>
 
       {/* Live Metrics Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center font-mono-tabular">
-        <div className="rounded-xl bg-[#181C26] border border-white/[0.06] py-2 px-3">
-          <div className="text-[11px] font-sans text-slate-400">En juego</div>
-          <div className="text-base font-bold text-white">
-            {tableStats.playersRemaining} / {tableStats.totalEntries}
+        <Tooltip title="Jugadores activos / Totales" content="Jugadores que siguen con vida frente al total de entradas registradas." className="w-full">
+          <div className="w-full rounded-xl bg-[#181C26] border border-white/[0.06] py-2 px-3">
+            <div className="text-[11px] font-sans text-slate-400">En juego</div>
+            <div className="text-base font-bold text-white">
+              {tableStats.playersRemaining} / {tableStats.totalEntries}
+            </div>
           </div>
-        </div>
-        <div className="rounded-xl bg-[#181C26] border border-white/[0.06] py-2 px-3">
-          <div className="text-[11px] font-sans text-slate-400">Rebuys</div>
-          <div className="text-base font-bold text-white">{tableStats.totalRebuys}</div>
-        </div>
-        <div className="rounded-xl bg-[#181C26] border border-white/[0.06] py-2 px-3">
-          <div className="text-[11px] font-sans text-slate-400">Add-ons</div>
-          <div className="text-base font-bold text-white">{tableStats.totalAddOns}</div>
-        </div>
-        <div className="rounded-xl bg-[#181C26] border border-white/[0.06] py-2 px-3">
-          <div className="text-[11px] font-sans text-slate-400">Knockouts</div>
-          <div className="text-base font-bold text-white">{tableStats.totalKnockouts}</div>
-        </div>
+        </Tooltip>
+        <Tooltip title="Recompras (Rebuys)" content="Total de recompras de fichas realizadas en la partida." className="w-full">
+          <div className="w-full rounded-xl bg-[#181C26] border border-white/[0.06] py-2 px-3">
+            <div className="text-[11px] font-sans text-slate-400">Rebuys</div>
+            <div className="text-base font-bold text-white">{tableStats.totalRebuys}</div>
+          </div>
+        </Tooltip>
+        <Tooltip title="Add-ons" content="Total de recargas finales de fichas añadidas al bote." className="w-full">
+          <div className="w-full rounded-xl bg-[#181C26] border border-white/[0.06] py-2 px-3">
+            <div className="text-[11px] font-sans text-slate-400">Add-ons</div>
+            <div className="text-base font-bold text-white">{tableStats.totalAddOns}</div>
+          </div>
+        </Tooltip>
+        <Tooltip title="Eliminaciones (KOs)" content="Total de jugadores eliminados hasta el momento." className="w-full">
+          <div className="w-full rounded-xl bg-[#181C26] border border-white/[0.06] py-2 px-3">
+            <div className="text-[11px] font-sans text-slate-400">Knockouts</div>
+            <div className="text-base font-bold text-white">{tableStats.totalKnockouts}</div>
+          </div>
+        </Tooltip>
       </div>
 
       {/* Quick +Player / +Rebuy / +Add-on / -Player buttons */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        <button
-          type="button"
-          onClick={onQuickAddPlayer}
-          className="min-h-[44px] flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-xs sm:text-sm font-semibold text-emerald-300 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Jugador</span>
-        </button>
+        <Tooltip title="Añadir jugador" content="Suma +1 jugador activo y +1 entrada inicial al bote total." className="w-full">
+          <button
+            type="button"
+            onClick={onQuickAddPlayer}
+            className="w-full min-h-[44px] flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-xs sm:text-sm font-semibold text-emerald-300 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Jugador</span>
+          </button>
+        </Tooltip>
 
-        <button
-          type="button"
-          onClick={onQuickAddRebuy}
-          className="min-h-[44px] flex items-center justify-center gap-1.5 rounded-xl bg-[#181C26] hover:bg-[#222735] border border-white/[0.08] text-xs sm:text-sm font-semibold text-slate-200 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Rebuy</span>
-        </button>
+        <Tooltip title="Registrar Rebuy" content="Suma +1 recompra al bote y añade sus fichas al stack promedio." className="w-full">
+          <button
+            type="button"
+            onClick={onQuickAddRebuy}
+            className="w-full min-h-[44px] flex items-center justify-center gap-1.5 rounded-xl bg-[#181C26] hover:bg-[#222735] border border-white/[0.08] text-xs sm:text-sm font-semibold text-slate-200 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Rebuy</span>
+          </button>
+        </Tooltip>
 
-        <button
-          type="button"
-          onClick={onQuickAddAddOn}
-          className="min-h-[44px] flex items-center justify-center gap-1.5 rounded-xl bg-[#181C26] hover:bg-[#222735] border border-white/[0.08] text-xs sm:text-sm font-semibold text-slate-200 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add-on</span>
-        </button>
+        <Tooltip title="Registrar Add-on" content="Suma +1 add-on al bote y añade sus fichas al promedio de la mesa." className="w-full">
+          <button
+            type="button"
+            onClick={onQuickAddAddOn}
+            className="w-full min-h-[44px] flex items-center justify-center gap-1.5 rounded-xl bg-[#181C26] hover:bg-[#222735] border border-white/[0.08] text-xs sm:text-sm font-semibold text-slate-200 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add-on</span>
+          </button>
+        </Tooltip>
 
-        <button
-          type="button"
-          onClick={onQuickEliminatePlayer}
-          disabled={tableStats.playersRemaining <= 1}
-          className="min-h-[44px] flex items-center justify-center gap-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 disabled:opacity-35 border border-rose-500/30 text-xs sm:text-sm font-semibold text-rose-300 cursor-pointer"
-        >
-          <Minus className="w-4 h-4" />
-          <span>Jugador</span>
-        </button>
+        <Tooltip title="Eliminar jugador" content="Resta 1 jugador activo y suma +1 Knockout recalculando la media de fichas." className="w-full">
+          <button
+            type="button"
+            onClick={onQuickEliminatePlayer}
+            disabled={tableStats.playersRemaining <= 1}
+            className="w-full min-h-[44px] flex items-center justify-center gap-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 disabled:opacity-35 border border-rose-500/30 text-xs sm:text-sm font-semibold text-rose-300 cursor-pointer"
+          >
+            <Minus className="w-4 h-4" />
+            <span>Jugador</span>
+          </button>
+        </Tooltip>
       </div>
 
       {/* Manual fine adjusters */}
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 pt-1">
         <span>Stack inicial: {formatFichas(tableStats.startingStack)}</span>
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() =>
-              onUpdate({
-                totalEntries: Math.max(
-                  tableStats.playersRemaining,
-                  tableStats.totalEntries - 1
-                ),
-              })
-            }
-            className="hover:text-white cursor-pointer"
-          >
-            -1 Entrada
-          </button>
+          <Tooltip title="Restar entrada" content="Reduce en 1 el total de entradas registradas.">
+            <button
+              type="button"
+              onClick={() =>
+                onUpdate({
+                  totalEntries: Math.max(
+                    tableStats.playersRemaining,
+                    tableStats.totalEntries - 1
+                  ),
+                })
+              }
+              className="hover:text-white cursor-pointer"
+            >
+              -1 Entrada
+            </button>
+          </Tooltip>
           <span>·</span>
-          <button
-            type="button"
-            onClick={() =>
-              onUpdate({ totalRebuys: Math.max(0, tableStats.totalRebuys - 1) })
-            }
-            className="hover:text-white cursor-pointer"
-          >
-            -1 Rebuy
-          </button>
+          <Tooltip title="Restar Rebuy" content="Reduce en 1 el contador de rebuys.">
+            <button
+              type="button"
+              onClick={() =>
+                onUpdate({ totalRebuys: Math.max(0, tableStats.totalRebuys - 1) })
+              }
+              className="hover:text-white cursor-pointer"
+            >
+              -1 Rebuy
+            </button>
+          </Tooltip>
           <span>·</span>
-          <button
-            type="button"
-            onClick={() =>
-              onUpdate({ totalAddOns: Math.max(0, tableStats.totalAddOns - 1) })
-            }
-            className="hover:text-white cursor-pointer"
-          >
-            -1 Add-on
-          </button>
+          <Tooltip title="Restar Add-on" content="Reduce en 1 el contador de add-ons.">
+            <button
+              type="button"
+              onClick={() =>
+                onUpdate({ totalAddOns: Math.max(0, tableStats.totalAddOns - 1) })
+              }
+              className="hover:text-white cursor-pointer"
+            >
+              -1 Add-on
+            </button>
+          </Tooltip>
           <span>·</span>
-          <button
-            type="button"
-            onClick={() =>
-              onUpdate({ totalKnockouts: Math.max(0, tableStats.totalKnockouts - 1) })
-            }
-            className="hover:text-white cursor-pointer"
-          >
-            -1 KO
-          </button>
+          <Tooltip title="Restar Knockout" content="Reduce en 1 el contador de eliminaciones.">
+            <button
+              type="button"
+              onClick={() =>
+                onUpdate({ totalKnockouts: Math.max(0, tableStats.totalKnockouts - 1) })
+              }
+              className="hover:text-white cursor-pointer"
+            >
+              -1 KO
+            </button>
+          </Tooltip>
         </div>
       </div>
     </div>
