@@ -1,0 +1,6 @@
+{
+  "name": "MesaPoker",
+  "description": "Cronómetro de póker y contador de ciegas 100% offline con alertas sonoras diferenciadas para móvil, tablet y ordenador.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
