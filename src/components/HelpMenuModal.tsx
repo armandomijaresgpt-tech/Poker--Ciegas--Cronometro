@@ -38,20 +38,20 @@ export const HelpMenuModal: React.FC<HelpMenuModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-t-3xl sm:rounded-2xl bg-[#12151C] border border-white/10 p-5 sm:p-6 shadow-2xl space-y-5 max-h-[calc(100dvh-24px)] overflow-y-auto"
+        className="w-full max-w-md sm:max-w-lg rounded-t-3xl sm:rounded-2xl bg-[#12151C] border border-white/10 p-4 sm:p-6 shadow-2xl space-y-3.5 sm:space-y-5 max-h-[82dvh] sm:max-h-[calc(100dvh-24px)] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between gap-4 pb-3 border-b border-white/[0.08]">
-          <div className="flex items-center gap-2.5">
+        <div className="flex items-center justify-between gap-3 pb-2.5 sm:pb-3 border-b border-white/[0.08]">
+          <div className="flex items-center gap-2">
             <GraduationCap className="w-5 h-5" style={{ color: accentHex }} />
-            <h2 id="help-modal-title" className="text-lg font-bold text-white">
+            <h2 id="help-modal-title" className="text-base sm:text-lg font-bold text-white">
               Guía, Tutorial y Tooltips
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] cursor-pointer"
+            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] cursor-pointer"
             aria-label="Cerrar ayuda"
           >
             <X className="w-5 h-5" />
@@ -59,13 +59,13 @@ export const HelpMenuModal: React.FC<HelpMenuModalProps> = ({
         </div>
 
         {/* 1. Guided Step-by-Step Tutorial */}
-        <div className="rounded-xl bg-[#181C26] border border-white/[0.08] p-4 space-y-3">
+        <div className="rounded-xl bg-[#181C26] border border-white/[0.08] p-3.5 sm:p-4 space-y-2.5 sm:space-y-3">
           <div>
             <h3 className="text-sm font-semibold text-white">
               Tutorial interactivo paso a paso
             </h3>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              Recorre las 5 secciones de MesaPoker en 14 pasos guiados: cronómetro, ciegas, Quick Setup, jugadores, liga, botes paralelos y ajustes.
+            <p className="text-xs text-slate-400 mt-0.5 sm:mt-1 leading-snug sm:leading-relaxed">
+              Recorre las 5 secciones de MesaPoker en 14 pasos guiados.
             </p>
           </div>
           <button
@@ -138,8 +138,8 @@ export const HelpMenuModal: React.FC<HelpMenuModalProps> = ({
           </button>
         </div>
 
-        {/* 4. Keyboard Shortcuts Reference */}
-        <div className="pt-3 border-t border-white/[0.08] space-y-2">
+        {/* 4. Keyboard Shortcuts Reference (Desktop only) */}
+        <div className="hidden md:block pt-3 border-t border-white/[0.08] space-y-2">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
             <Keyboard className="w-4 h-4 text-slate-400" />
             <span>Atajos rápidos en ordenador</span>

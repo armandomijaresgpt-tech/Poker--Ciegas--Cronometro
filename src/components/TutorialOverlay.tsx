@@ -37,6 +37,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   const [stepIndex, setStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<SpotlightRect | null>(null);
   const [cardPos, setCardPos] = useState<{ left: number; top: number } | null>(null);
+  const [showTipOnMobile, setShowTipOnMobile] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const { exploreMode, setExploreMode } = useTooltipContext();
 
@@ -64,9 +65,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     const r = visible.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const pad = 6;
+    const pad = 5;
 
-    // Clamp spotlight rectangle strictly within the visible viewport
     const left = Math.max(4, r.left - pad);
     const top = Math.max(4, r.top - pad);
     const right = Math.min(vw - 4, r.right + pad);
@@ -90,7 +90,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     setStepIndex(0);
+    setShowTipOnMobile(false);
   }, [isOpen]);
+
+  useEffect(() => {
+    setShowTipOnMobile(false);
+  }, [stepIndex]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -101,8 +106,16 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       if (visible) {
         const rect = visible.getBoundingClientRect();
         const vh = window.innerHeight;
-        // If target is tall, align its top safely below the sticky header; otherwise center
-        if (rect.height > vh * 0.55) {
+        const isMobile = window.innerWidth < 640;
+
+        if (isMobile) {
+          // On phones, keep fixed bottom nav untouched and scroll non-nav targets into the upper screen half
+          const isBottomNav = rect.top > vh * 0.75 && rect.height < 110;
+          if (!isBottomNav) {
+            const targetTopY = Math.max(0, window.scrollY + rect.top - 64);
+            window.scrollTo({ top: targetTopY, behavior: 'smooth' });
+          }
+        } else if (rect.height > vh * 0.55) {
           const y = window.scrollY + rect.top - 80;
           window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
         } else {
@@ -149,13 +162,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const margin = 14;
-    const gap = 14;
+    const isMobile = vw < 640;
+    const margin = isMobile ? 10 : 14;
+    const gap = isMobile ? 10 : 14;
     const cardRect = card.getBoundingClientRect();
-    const cardW = cardRect.width || Math.min(440, vw - margin * 2);
-    const cardH = cardRect.height || 360;
+    const cardW = cardRect.width || Math.min(420, vw - margin * 2);
+    const cardH = cardRect.height || (isMobile ? 190 : 320);
 
-    // Default centered position (used when no targetRect)
     if (!targetRect) {
       const left = Math.max(margin, (vw - cardW) / 2);
       const top = Math.max(margin, Math.min(vh - cardH - margin, (vh - cardH) / 2));
@@ -163,15 +176,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       return;
     }
 
-    const isMobile = vw < 640;
     if (isMobile) {
       const left = Math.max(margin, (vw - cardW) / 2);
       const targetCenterY = targetRect.top + targetRect.height / 2;
-      // Place card opposite to the highlighted area on mobile so it never covers it
+      // Place compact tutorial bar on the opposite vertical side of the highlighted region
       const preferredTop =
-        targetCenterY > vh * 0.55
-          ? margin
-          : vh - cardH - margin;
+        targetCenterY > vh * 0.56 ? margin : vh - cardH - margin;
       const top = Math.max(margin, Math.min(vh - cardH - margin, preferredTop));
       setCardPos({ left, top });
       return;
@@ -196,12 +206,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       left = targetRect.left - cardW - gap;
       top = targetRect.top + targetRect.height / 2 - cardH / 2;
     } else {
-      // Target fills most of viewport: anchor cleanly at bottom-right/center inside safe bounds
       left = vw - cardW - margin - 8;
       top = vh - cardH - margin - 8;
     }
 
-    // Strict final viewport clamping so the card NEVER overflows any edge
     left = Math.max(margin, Math.min(vw - cardW - margin, left));
     top = Math.max(margin, Math.min(vh - cardH - margin, top));
 
@@ -211,7 +219,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   useLayoutEffect(() => {
     if (!isOpen) return;
     computeCardPosition();
-  }, [isOpen, stepIndex, targetRect, computeCardPosition]);
+  }, [isOpen, stepIndex, targetRect, showTipOnMobile, computeCardPosition]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -259,22 +267,22 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
               top: `${targetRect.top}px`,
               width: `${targetRect.width}px`,
               height: `${targetRect.height}px`,
-              boxShadow: '0 0 0 9999px rgba(5, 7, 11, 0.78)',
+              boxShadow: '0 0 0 9999px rgba(5, 7, 11, 0.72)',
               border: `2px solid ${accentHex}`,
             }}
           />
         </>
       ) : (
         <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/75 backdrop-blur-sm"
           onClick={onClose}
         />
       )}
 
-      {/* Tutorial Card — always clamped inside viewport with internal scroll fallback */}
+      {/* Compact Mobile Card / Clean Desktop Card */}
       <div
         ref={cardRef}
-        className="fixed z-[92] w-[calc(100vw-28px)] max-w-[440px] max-h-[calc(100dvh-28px)] overflow-y-auto rounded-2xl bg-[#12151C] border border-white/15 p-4 sm:p-5 shadow-2xl space-y-3.5"
+        className="fixed z-[92] w-[calc(100vw-20px)] sm:w-[calc(100vw-28px)] max-w-[380px] sm:max-w-[420px] max-h-[44dvh] sm:max-h-[calc(100dvh-28px)] overflow-y-auto rounded-2xl bg-[#12151C]/95 backdrop-blur-md border border-white/15 p-3 sm:p-5 shadow-2xl space-y-2 sm:space-y-3"
         style={
           cardPos
             ? {
@@ -289,53 +297,100 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         }
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top Meta & Close */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
-            <GraduationCap className="w-4 h-4 shrink-0" style={{ color: accentHex }} />
-            <span>{step.category}</span>
+        {/* Top Meta + Close */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-slate-400 min-w-0">
+            <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: accentHex }} />
+            <span className="truncate">{step.category}</span>
             <span aria-hidden="true">·</span>
-            <span className="font-mono-tabular">
-              Paso {stepIndex + 1} de {TUTORIAL_STEPS.length}
+            <span className="font-mono-tabular shrink-0">
+              {stepIndex + 1}/{TUTORIAL_STEPS.length}
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.08] cursor-pointer"
-            aria-label="Cerrar tutorial"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Compact Chapter Selector on Mobile */}
+            <select
+              aria-label="Saltar a sección"
+              value={
+                step.category === 'Inicio'
+                  ? 0
+                  : step.category === 'Reloj'
+                    ? 2
+                    : step.category === 'Estructura'
+                      ? 9
+                      : step.category === 'Liga'
+                        ? 11
+                        : step.category === 'Botes'
+                          ? 12
+                          : 13
+              }
+              onChange={(e) => setStepIndex(Number(e.target.value))}
+              className="sm:hidden min-h-[28px] rounded-lg bg-[#181C26] border border-white/10 px-1.5 text-[11px] text-slate-200"
+            >
+              <option value={0}>Inicio</option>
+              <option value={2}>Reloj</option>
+              <option value={9}>Estructura</option>
+              <option value={11}>Liga</option>
+              <option value={12}>Botes</option>
+              <option value={13}>Ajustes</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-[30px] min-w-[30px] sm:min-h-[34px] sm:min-w-[34px] flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] cursor-pointer"
+              aria-label="Cerrar tutorial"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Step Progress */}
-        <div className="h-1.5 w-full rounded-full bg-white/[0.08] overflow-hidden">
+        <div className="h-1 w-full rounded-full bg-white/[0.08] overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-300"
             style={{ width: `${progressPct}%`, backgroundColor: accentHex }}
           />
         </div>
 
-        {/* Title & Explanation */}
-        <div className="space-y-1.5">
-          <h3 className="text-base sm:text-lg font-bold text-white leading-snug">
+        {/* Title & Concise Explanation */}
+        <div className="space-y-1">
+          <h3 className="text-sm sm:text-base font-bold text-white leading-snug">
             {step.title}
           </h3>
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-300 leading-snug sm:leading-relaxed">
             {step.description}
           </p>
         </div>
 
-        {/* Tip */}
-        <div className="rounded-xl bg-[#181C26] border border-white/[0.06] px-3.5 py-2.5 flex items-start gap-2.5 text-xs text-slate-300 leading-relaxed">
+        {/* Tip: inline expandable on mobile, visible box on sm+ */}
+        <div className="sm:hidden">
+          {showTipOnMobile ? (
+            <div className="rounded-lg bg-[#181C26] border border-white/[0.06] px-2.5 py-1.5 flex items-start gap-2 text-[11px] text-slate-300 leading-snug">
+              <Sparkles className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-300" />
+              <span>{step.tip}</span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowTipOnMobile(true)}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-300/90 hover:text-amber-200 cursor-pointer"
+            >
+              <Sparkles className="w-3 h-3" />
+              <span>Ver consejo</span>
+            </button>
+          )}
+        </div>
+
+        <div className="hidden sm:flex rounded-xl bg-[#181C26] border border-white/[0.06] px-3 py-2 items-start gap-2 text-xs text-slate-300 leading-relaxed">
           <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-amber-300" />
           <span>{step.tip}</span>
         </div>
 
-        {/* Quick Chapter Jump */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+        {/* Desktop Quick Chapter Jump */}
+        <div className="hidden sm:flex flex-wrap items-center gap-1.5">
           {[
             { label: 'Reloj', idx: 2 },
             { label: 'Estructura', idx: 9 },
@@ -349,7 +404,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 key={ch.label}
                 type="button"
                 onClick={() => setStepIndex(ch.idx)}
-                className={`min-h-[30px] px-2.5 rounded-lg text-[11px] font-medium transition-colors cursor-pointer ${
+                className={`min-h-[28px] px-2.5 rounded-lg text-[11px] font-medium transition-colors cursor-pointer ${
                   active
                     ? 'bg-white text-slate-950 font-semibold'
                     : 'bg-[#181C26] text-slate-400 hover:text-white'
@@ -361,36 +416,36 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           })}
         </div>
 
-        {/* Navigation Footer */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/[0.08]">
+        {/* Compact Single-Row Footer */}
+        <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-white/[0.08]">
           <button
             type="button"
             onClick={() => {
               setExploreMode(!exploreMode);
               onClose();
             }}
-            className="min-h-[40px] flex items-center gap-1.5 px-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-white/[0.06] cursor-pointer"
+            className="min-h-[34px] sm:min-h-[38px] flex items-center gap-1.5 px-2 rounded-lg text-[11px] sm:text-xs font-medium text-slate-300 hover:text-white hover:bg-white/[0.06] cursor-pointer whitespace-nowrap"
           >
-            <Compass className="w-3.5 h-3.5 text-amber-300" />
-            <span>{exploreMode ? 'Salir de explorar' : 'Explorar botones'}</span>
+            <Compass className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+            <span>{exploreMode ? 'Salir explorar' : 'Explorar'}</span>
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={() => setStepIndex((i) => Math.max(0, i - 1))}
               disabled={isFirst}
-              className="min-h-[40px] px-3 flex items-center gap-1 rounded-xl bg-[#181C26] hover:bg-[#222735] disabled:opacity-35 text-xs font-medium text-white cursor-pointer"
+              className="min-h-[34px] sm:min-h-[38px] px-2.5 sm:px-3 flex items-center gap-1 rounded-xl bg-[#181C26] hover:bg-[#222735] disabled:opacity-35 text-[11px] sm:text-xs font-medium text-white cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" />
-              <span>Anterior</span>
+              <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span>Ant.</span>
             </button>
 
             {isLast ? (
               <button
                 type="button"
                 onClick={onClose}
-                className="min-h-[40px] px-4 rounded-xl text-xs font-semibold text-white cursor-pointer"
+                className="min-h-[34px] sm:min-h-[38px] px-3.5 sm:px-4 rounded-xl text-[11px] sm:text-xs font-semibold text-white cursor-pointer"
                 style={{ backgroundColor: accentHex }}
               >
                 Finalizar
@@ -401,11 +456,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 onClick={() =>
                   setStepIndex((i) => Math.min(TUTORIAL_STEPS.length - 1, i + 1))
                 }
-                className="min-h-[40px] px-4 flex items-center gap-1 rounded-xl text-xs font-semibold text-white cursor-pointer"
+                className="min-h-[34px] sm:min-h-[38px] px-3 sm:px-4 flex items-center gap-1 rounded-xl text-[11px] sm:text-xs font-semibold text-white cursor-pointer"
                 style={{ backgroundColor: accentHex }}
               >
                 <span>Siguiente</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             )}
           </div>

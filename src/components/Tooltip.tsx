@@ -132,12 +132,12 @@ export const TooltipProvider: React.FC<TooltipProviderProps> = ({
     >
       {exploreMode && (
         <div
-          className="fixed bottom-20 md:bottom-5 left-1/2 -translate-x-1/2 z-[85] max-w-[92vw] flex items-center gap-3 rounded-2xl bg-[#181C26]/95 border px-4 py-2.5 shadow-2xl backdrop-blur-md text-xs sm:text-sm text-white"
+          className="fixed bottom-[70px] md:bottom-5 left-1/2 -translate-x-1/2 z-[85] max-w-[calc(100vw-20px)] flex items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl bg-[#181C26]/95 border px-3 py-1.5 sm:px-4 sm:py-2 shadow-2xl backdrop-blur-md text-[11px] sm:text-sm text-white"
           style={{ borderColor: accentHex }}
         >
-          <Compass className="w-4 h-4 shrink-0" style={{ color: accentHex }} />
-          <span className="leading-snug">
-            Modo Explorar activo · Toca cualquier botón o panel para ver qué hace
+          <Compass className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" style={{ color: accentHex }} />
+          <span className="leading-snug truncate">
+            Modo Explorar · Toca cualquier botón
           </span>
           <button
             type="button"
@@ -145,7 +145,7 @@ export const TooltipProvider: React.FC<TooltipProviderProps> = ({
               setExploreMode(false);
               setActiveTooltip(null);
             }}
-            className="min-h-[34px] px-3 rounded-xl text-xs font-semibold text-white shrink-0 cursor-pointer"
+            className="min-h-[28px] sm:min-h-[34px] px-2.5 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-semibold text-white shrink-0 cursor-pointer"
             style={{ backgroundColor: accentHex }}
           >
             Salir
@@ -221,7 +221,7 @@ const FloatingTooltipPortal: React.FC<FloatingTooltipPortalProps> = ({
     <div
       ref={boxRef}
       role="tooltip"
-      className={`fixed z-[95] max-w-[min(320px,calc(100vw-24px))] max-h-[calc(100dvh-24px)] overflow-y-auto rounded-xl bg-[#161A24] border border-white/15 px-3.5 py-2.5 shadow-2xl text-left transition-opacity duration-150 ${
+      className={`fixed z-[95] max-w-[min(250px,calc(100vw-20px))] sm:max-w-[300px] max-h-[calc(100dvh-24px)] overflow-y-auto rounded-xl bg-[#161A24] border border-white/15 px-2.5 py-2 sm:px-3.5 sm:py-2.5 shadow-2xl text-left transition-opacity duration-150 ${
         tooltip.pinned ? 'pointer-events-auto' : 'pointer-events-none'
       } ${coords.ready ? 'opacity-100' : 'opacity-0'}`}
       style={{
@@ -230,22 +230,24 @@ const FloatingTooltipPortal: React.FC<FloatingTooltipPortalProps> = ({
       }}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="space-y-1 min-w-0">
+        <div className="space-y-0.5 sm:space-y-1 min-w-0">
           {tooltip.title && (
             <div
-              className="text-xs font-bold leading-tight"
+              className="text-[11px] sm:text-xs font-bold leading-tight"
               style={{ color: accentHex }}
             >
               {tooltip.title}
             </div>
           )}
-          <p className="text-xs text-slate-200 leading-relaxed">{tooltip.content}</p>
+          <p className="text-[11px] sm:text-xs text-slate-200 leading-snug sm:leading-relaxed">
+            {tooltip.content}
+          </p>
         </div>
         {tooltip.pinned && (
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[28px] min-w-[28px] flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] shrink-0 cursor-pointer"
+            className="min-h-[26px] min-w-[26px] flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] shrink-0 cursor-pointer"
             aria-label="Cerrar ayuda"
           >
             <X className="w-3.5 h-3.5" />
